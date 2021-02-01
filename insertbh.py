@@ -84,17 +84,18 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None):
 
 
 	for key in s.dm.keys():
-		new_snap.dm[key] = s.dm[key].in_units(s.infer_original_units(s.dm[key].units))
+		new_snap.dm[key] = s.dm[key].in_units(s.infer_original_units(s.dm[key].units), a=s.properties['a'])
 	for key in s.g.keys():
-		new_snap.g[key] = s.g[key].in_units(s.infer_original_units(s.g[key].units))
+		new_snap.g[key] = s.g[key].in_units(s.infer_original_units(s.g[key].units), a=s.properties['a'])
 	for key in s.s.keys():
 		if bhdata and key in bhdata.keys():
-			bhvals = bhdata[key].in_units(s.infer_original_units(s.s[key].units)) #make sure to match the original simulation units!
+			# make sure to match the original simulation units!
+			bhvals = bhdata[key].in_units(s.infer_original_units(s.s[key].units), a=s.properties['a'])
 		else:
 			print("data for ", key, " was not provided, using 0.0")
 			bhvals = np.zeros(nbhs)
 		new_snap.s[key] = pynbody.array.SimArray(np.append(np.asarray(
-			s.s[key].in_units(s.infer_original_units(s.s[key].units))), np.asarray(bhvals)), s.s[key].units)
+			s.s[key].in_units(s.infer_original_units(s.s[key].units)),a=s.properties['a']), np.asarray(bhvals)), s.s[key].units)
 
 	new_snap._byteswap = s._byteswap
 	new_snap.properties = s.properties
