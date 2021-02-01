@@ -107,6 +107,7 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 	ts = db.get_timestep(sim+'/%'+str(step))
 	simfolder = os.getenv('TANGOS_SIMULATION_FOLDER')
 	snapfile = simfolder + '/' + ts.path
+	print('getting data from ', snapfile)
 	s = pynbody.load(snapfile)
 	h = s.halos(dosort=True)
 
@@ -118,7 +119,7 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		print("getting BH data for halo", hh)
 		target = db.get_halo(sim+'/%'+str(step)+'/'+str(hh))
 		position = pynbody.array.SimArray(target['shrink_center'], 'kpc')
-		bhdata['pos'].append(position)
+		bhdata['pos'].append(position.in_units(s.infer_original_units('kpc')))
 
 		ht = h.load_copy(hh)
 
