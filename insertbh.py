@@ -3,6 +3,14 @@ import numpy as np
 import struct
 import os
 
+def insert_bhs(sim, step, halos, filename, bhmass=1e5, part_center=32):
+	import tangos as db
+	bhdata = create_central_bh(sim, step, halos, part_center=part_center, bhmass=bhmass)
+	simfolder = os.getenv('TANGOS_SIMULATION_FOLDER')
+	snapfile = simfolder+'/'+db.get_timestep(sim+'/%'+str(step)).path
+	s = pynbody.load(snapfile)
+	create_bh_tipsy_file(s, len(halos), filename, bhdata=bhdata)
+
 def insert_tipsy_array_file(snap, array_name, values, binary=True, filename=None):
 	if type(snap) == pynbody.snapshot.tipsy.TipsySnap:
 		s = snap
@@ -42,7 +50,7 @@ def insert_tipsy_array_file(snap, array_name, values, binary=True, filename=None
 		f.close()
 
 
-def insert_tipsy_file(snap, nbhs, filename, bhdata=None):
+def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None):
 	# read in original snapshot
 	if type(snap) == pynbody.snapshot.tipsy.TipsySnap:
 		s = snap
