@@ -136,10 +136,10 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		ht.wrap()
 
 
-		r_sdm = ht[(pynbody.filt.FamilyFilter(pynbody.family.star)|pynbody.filt.FamilyFilter(pynbody.family.dark))]['r']
-		phi_sdm = ht[(pynbody.filt.FamilyFilter(pynbody.family.star)|pynbody.filt.FamilyFilter(pynbody.family.dark))]['phi']
+		r_sdm = ht[(pynbody.filt.FamilyFilter(pynbody.family.star)|pynbody.filt.FamilyFilter(pynbody.family.dm))]['r']
+		phi_sdm = ht[(pynbody.filt.FamilyFilter(pynbody.family.star)|pynbody.filt.FamilyFilter(pynbody.family.dm))]['phi']
 		rmax = r_sdm[np.argsort(r_sdm)][part_center-1]
-		cen = ht[(pynbody.filt.FamilyFilter(pynbody.family.star)|pynbody.filt.FamilyFilter(pynbody.family.dark))
+		cen = ht[(pynbody.filt.FamilyFilter(pynbody.family.star)|pynbody.filt.FamilyFilter(pynbody.family.dm))
 		         & pynbody.filt.Sphere(rmax)]
 
 		vcen = (cen['vel'].transpose() * cen['mass']).sum(axis=1) / \
