@@ -84,10 +84,13 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None):
 
 
 	for key in s.dm.keys():
+		print("loading dark matter sim data for", key)
 		new_snap.dm[key] = s.dm[key].in_units(s.infer_original_units(s.dm[key].units), a=s.properties['a'])
 	for key in s.g.keys():
+		print("loading gas sim data for", key)
 		new_snap.g[key] = s.g[key].in_units(s.infer_original_units(s.g[key].units), a=s.properties['a'])
 	for key in s.s.keys():
+		print("loading and adding new star data for", key)
 		if bhdata and key in bhdata.keys():
 			# make sure to match the original simulation units!
 			bhvals = bhdata[key].in_units(s.infer_original_units(s.s[key].units), a=s.properties['a'])
