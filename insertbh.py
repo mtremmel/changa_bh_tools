@@ -132,7 +132,7 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 
 		ht = h.load_copy(hh)
 
-		ht['pos'] -= position.in_units(s.infer_original_units('kpc'))
+		ht['pos'] -= position.in_units(s.infer_original_units('kpc'), a = s.properties['a'])
 		ht.wrap()
 
 
