@@ -104,9 +104,11 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None):
 		if s.s[key].units != pynbody.units.NoUnit():
 			new_snap.s[key] = pynbody.array.SimArray(
 				np.append(np.asarray(s.s[key].in_units(s.infer_original_units(s.s[key].units),a=s.properties['a'])),
-				          np.asarray(bhvals)), s.infer_original_units(s.s[key].units))
+				np.asarray(bhvals)).reshape(np.shape(new_snap.s[key])),
+				s.infer_original_units(s.s[key].units))
 		else:
-			new_snap.s[key] = pynbody.array.SimArray(np.append(np.asarray(s.s[key]),np.asarray(bhvals)))
+			new_snap.s[key] = pynbody.array.SimArray(
+				np.append(np.asarray(s.s[key]),np.asarray(bhvals)).reshape(np.shape(new_snap.s[key])))
 
 	new_snap._byteswap = s._byteswap
 	new_snap.properties = s.properties
