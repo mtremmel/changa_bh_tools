@@ -121,7 +121,7 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 	h = s.halos(dosort=True)
 
 	bhdata = {}
-	for key in s.loadable_keys():
+	for key in s.s.loadable_keys():
 		bhdata[key] = []
 
 	for hh in halo_numbers:
