@@ -95,7 +95,7 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None):
 			print("data for ", key, " was not provided, using 0.0")
 			bhvals = np.zeros(nbhs)
 		new_snap.s[key] = pynbody.array.SimArray(np.append(np.asarray(
-			s.s[key].in_units(s.infer_original_units(s.s[key].units)),a=s.properties['a']), np.asarray(bhvals)), s.s[key].units)
+			s.s[key].in_units(s.infer_original_units(s.s[key].units),a=s.properties['a'])), np.asarray(bhvals)), s.infer_original_units(s.s[key].units))
 
 	new_snap._byteswap = s._byteswap
 	new_snap.properties = s.properties
@@ -128,7 +128,7 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		print("getting BH data for halo", hh)
 		target = db.get_halo(sim+'/%'+str(step)+'/'+str(hh))
 		position = pynbody.array.SimArray(target['shrink_center'], 'kpc')
-		bhdata['pos'].append(position.in_units(s.infer_original_units('kpc')))
+		bhdata['pos'].append(position.in_units(s.infer_original_units('kpc'), a=s.properties['a']))
 
 		ht = h.load_copy(hh)
 
