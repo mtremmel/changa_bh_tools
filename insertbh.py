@@ -73,6 +73,10 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None):
 	#create a new snapshot from scratch
 	new_snap = pynbody.new(dm=ndm, gas=ng, star=ns+nbhs, order='gas,dm,star')
 
+	#load in array files by hand to ensure pynbody won't try to use the starlog
+	for key in s.loadable_keys():
+		if key not in s._basic_loadable_keys['star'].union(s._basic_loadable_keys['gas'], s._basic_loadable_keys['dm']):
+			s._load_array(key, filename=s._filename+'.'+key)
 
 	for key in s.dm.loadable_keys():
 		print("loading dark matter sim data for", key)
@@ -97,8 +101,12 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None):
 		else:
 			print("data for ", key, " was not provided, using 0.0")
 			bhvals = np.zeros(nbhs)
-		new_snap.s[key] = pynbody.array.SimArray(np.append(np.asarray(
-			s.s[key].in_units(s.infer_original_units(s.s[key].units),a=s.properties['a'])), np.asarray(bhvals)), s.infer_original_units(s.s[key].units))
+		if s.s[key].units != pynbody.units.NoUnit():
+			new_snap.s[key] = pynbody.array.SimArray(
+				np.append(np.asarray(s.s[key].in_units(s.infer_original_units(s.s[key].units),a=s.properties['a'])),
+				          np.asarray(bhvals)), s.infer_original_units(s.s[key].units))
+		else:
+			new_snap.s[key] = pynbody.array.SimArray(np.append(np.asarray(s.s[key]),np.asarray(bhvals)))
 
 	new_snap._byteswap = s._byteswap
 	new_snap.properties = s.properties
