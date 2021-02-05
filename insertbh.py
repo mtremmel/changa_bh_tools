@@ -121,8 +121,10 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 	h = s.halos(dosort=True)
 
 	bhdata = {}
+	units = {}
 	for key in s.s.loadable_keys():
 		bhdata[key] = []
+		units[key] = ''
 
 	for hh in halo_numbers:
 		print("getting BH data for halo", hh)
@@ -131,7 +133,6 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		bhdata['pos'].append(position.in_units(s.infer_original_units('kpc'), a=s.properties['a']))
 
 		ht = h.load_copy(hh)
-
 		ht['pos'] -= position.in_units(s.infer_original_units('kpc'), a = s.properties['a'])
 		ht.wrap()
 
@@ -151,16 +152,17 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		bhdata['phi'].append(pot)
 
 		bhdata['tform'].append(-1)
-		bhdata['metals'].append(0)
 		bhdata['eps'].append(ht.s['eps'].min())
 		bhdata['mass'].append(bhmass)
 
 	for key in bhdata.keys():
-		if key == 'mass':
-			unit = 'Msol'
+		if key =='mass':
+			units['mass'] = 'Msol'
 		else:
-			unit = ht.s[key].units
-		bhdata[key] = pynbody.array.SimArray(bhdata.keys, unit)
+			units[key] = s.infer_original_units(ht.s[key].units)
+
+	for key in bhdata.keys():
+		bhdata[key] = pynbody.array.SimArray(bhdata[key], units[key])
 
 	return bhdata
 
