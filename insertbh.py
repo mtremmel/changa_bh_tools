@@ -155,11 +155,10 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		bhdata['eps'].append(ht.s['eps'].min())
 		bhdata['mass'].append(bhmass)
 
+	units['mass'] = 'Msol' #the BH masses are always expected to be given in solar masses just to keep things user friendly
 	for key in bhdata.keys():
-		if key =='mass':
-			units['mass'] = 'Msol'
-		else:
-			units[key] = s.infer_original_units(ht.s[key].units)
+		if key != 'mass':
+			units[key] = ht.s[key].units
 
 	for key in bhdata.keys():
 		bhdata[key] = pynbody.array.SimArray(bhdata[key], units[key])
