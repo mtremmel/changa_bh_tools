@@ -152,8 +152,12 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		bhdata['phi'].append(pot)
 
 		bhdata['tform'].append(-1)
+		bhdata['rung'].append(6) #guess at a reasonable BH rung just in case
 		bhdata['eps'].append(ht.s['eps'].min())
 		bhdata['mass'].append(bhmass)
+		for key in bhdata.keys(): #fill in the rest of the available auxillary data with zeros
+			if key not in ['pos','vel','mass','eps','tform','rung','phi']:
+				bhdata[key].append(0)
 
 	units['mass'] = 'Msol' #the BH masses are always expected to be given in solar masses just to keep things user friendly
 	for key in bhdata.keys():
