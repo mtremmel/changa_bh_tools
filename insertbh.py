@@ -69,15 +69,6 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None):
 				raise ValueError("Error: bhdata provided does not have the correct number of values for", key)
 			if not hasattr(bhdata[key],'units'):
 				raise ValueError("Error: bhdata provided must be SimArray objects with units")
-			#if key not in s.loadable_keys():
-			#	raise ValueError("Error: ", key, "not found in simulation's loadable keys!")
-			#prime the original data by reading in all of the provided bh data
-			if key in s.loadable_keys():
-				try:
-					s[key]
-				except:
-					print("warning:", key, "Not able to be loaded in original snapshot")
-					continue
 
 	#create a new snapshot from scratch
 	new_snap = pynbody.new(dm=ndm, gas=ng, star=ns+nbhs, order='gas,dm,star')
@@ -85,15 +76,24 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None):
 
 	for key in s.dm.keys():
 		print("loading dark matter sim data for", key)
-		new_snap.dm[key] = s.dm[key].in_units(s.infer_original_units(s.dm[key].units), a=s.properties['a'])
+		if s.dm[key].units != pynbody.units.NoUnit():
+			new_snap.dm[key] = s.dm[key].in_units(s.infer_original_units(s.dm[key].units), a=s.properties['a'])
+		else:
+			new_snap.dm[key] = s.dm[key]
 	for key in s.g.keys():
 		print("loading gas sim data for", key)
-		new_snap.g[key] = s.g[key].in_units(s.infer_original_units(s.g[key].units), a=s.properties['a'])
+		if s.g[key].units != pynbody.units.NoUnit():
+			new_snap.g[key] = s.g[key].in_units(s.infer_original_units(s.g[key].units), a=s.properties['a'])
+		else:
+			new_snap.g[key] = s.g[key]
 	for key in s.s.keys():
 		print("loading and adding new star data for", key)
 		if bhdata and key in bhdata.keys():
 			# make sure to match the original simulation units!
-			bhvals = bhdata[key].in_units(s.infer_original_units(s.s[key].units), a=s.properties['a'])
+			if bhdata[key].units != pynbody.units.NoUnit():
+				bhvals = bhdata[key].in_units(s.infer_original_units(s.s[key].units), a=s.properties['a'])
+			else:
+				bhvals = bhdata[key]
 		else:
 			print("data for ", key, " was not provided, using 0.0")
 			bhvals = np.zeros(nbhs)
