@@ -69,10 +69,10 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None):
 				raise ValueError("Error: bhdata provided does not have the correct number of values for", key)
 			if not hasattr(bhdata[key],'units'):
 				raise ValueError("Error: bhdata provided must be SimArray objects with units")
-			if bhdata[key].units == pynbody.units.NoUnit():
-				raise ValueError("Error: bhdata for ", key, " does not have units")
+			#if key not in s.loadable_keys():
+			#	raise ValueError("Error: ", key, "not found in simulation's loadable keys!")
 			#prime the original data by reading in all of the provided bh data
-			if key in s._basic_loadable_keys() or key in s.loadable_keys():
+			if key in s.loadable_keys():
 				try:
 					s[key]
 				except:
