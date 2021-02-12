@@ -14,9 +14,11 @@ def insert_bhs(sim, step, halos, filename, bhmass=1e5, part_center=32):
 		slfile = slfile_list[0]
 	else:
 		raise IOError("starlog file not found!")
-
+	print("reading starlog!")
+	sl = pynbody.snapshot.tipsy.StarLog(slfile)
+	print("creating tipsy file...")
 	create_bh_tipsy_file(s, len(halos), filename+'.'+str(step), bhdata=bhdata)
-	create_bh_starlog(s, slfile, bhdata, filename+'.starlog')
+	create_bh_starlog(s, sl, bhdata, filename+'.starlog')
 	return
 
 def insert_tipsy_array_file(snap, array_name, values, binary=True, filename=None):
@@ -124,6 +126,7 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None):
 
 	new_snap._byteswap = s._byteswap
 	new_snap.properties = s.properties
+	print("writing data...")
 	new_snap.write(fmt=pynbody.snapshot.tipsy.TipsySnap, filename=filename)
 
 
@@ -201,6 +204,7 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 
 def get_starlog_meta(sl):
 	with open(sl._logfile, 'r') as g:
+		print("reading in starlog meta data...")
 		read_metadata = False
 		structure_names = []
 		structure_formats = []
@@ -250,6 +254,7 @@ def create_bh_starlog(snap, sl, bhdata, filename):
 	for key in sldata.keys(): #add in meaningless BH data for filler space
 		sldata[key][nstar:] = np.zeros(len(bhdata['iord'])).astype(file_structure[key])
 
+	print("writing starlog data...")
 	if sl._byteswap:
 		sldata.byteswap().tofile(f)
 	else:
