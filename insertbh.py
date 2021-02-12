@@ -193,6 +193,7 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 
 	units['mass'] = 'Msol' #the BH masses are always expected to be given in solar masses just to keep things user friendly
 	for key in bhdata.keys():
+		print("initializing units for", key)
 		if key != 'mass':
 			try:
 				units[key] = ht.s[key].units
@@ -226,7 +227,7 @@ def get_starlog_meta(sl):
 	return file_structure
 
 def create_bh_starlog(snap, sl, bhdata, filename):
-	f = pynbody.util.open_(filename)
+	f = pynbody.util.open_(filename, 'wb')
 	file_structure = get_starlog_meta(sl)
 	if sl._byteswap:
 		f.write(struct.pack(">i", file_structure.itemsize))
