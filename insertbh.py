@@ -185,6 +185,8 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		bhdata['rung'].append(6) #guess at a reasonable BH rung just in case
 		bhdata['eps'].append(ht.s['eps'].min())
 		bhdata['mass'].append(bhmass)
+		if 'massform' in bhdata.keys():
+			bhdata['masform'].append(bhmass)
 		bhdata['iord'].append(iord_max+bhcount)
 		bhcount+=1
 		for key in bhdata.keys(): #fill in the rest of the available auxillary data with zeros
@@ -194,11 +196,13 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 	units['mass'] = 'Msol' #the BH masses are always expected to be given in solar masses just to keep things user friendly
 	for key in bhdata.keys():
 		print("initializing units for", key)
-		if key != 'mass':
+		if key != 'mass' and key!='massform':
 			try:
 				units[key] = ht.s[key].units
 			except:
 				units[key] = ht[key].units
+		if key == 'massform': #try to avoid massform which shows up often as an array file and in the starlog
+			units[key] = 'Msol'
 
 	for key in bhdata.keys():
 		bhdata[key] = pynbody.array.SimArray(bhdata[key], units[key])
@@ -243,7 +247,7 @@ def create_bh_starlog(snap, sl, bhdata, filename):
 
 	sldata = np.zeros(len(sluse)+len(bhdata), dtype=file_structure)
 	for key in file_structure.names:
-		sldata[key][:len(sluse)] = sl[key][sluse]
+		sldata[key][:nstar] = sl[key][sluse]
 
 	#add in bh data that's meaningful
 	sldata['x'][nstar:] = bhdata['pos'][:,0].astype(file_structure['x'])
