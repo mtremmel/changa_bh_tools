@@ -194,7 +194,10 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 	units['mass'] = 'Msol' #the BH masses are always expected to be given in solar masses just to keep things user friendly
 	for key in bhdata.keys():
 		if key != 'mass':
-			units[key] = ht.s[key].units
+			try:
+				units[key] = ht.s[key].units
+			except:
+				units[key] = ht[key].units
 
 	for key in bhdata.keys():
 		bhdata[key] = pynbody.array.SimArray(bhdata[key], units[key])
