@@ -1,7 +1,7 @@
 import pynbody
 import numpy as np
 import struct
-import os
+import os, sys, glob
 
 def insert_bhs(sim, step, halos, filename, bhmass=1e5, part_center=32):
 	import tangos as db
@@ -9,7 +9,15 @@ def insert_bhs(sim, step, halos, filename, bhmass=1e5, part_center=32):
 	simfolder = os.getenv('TANGOS_SIMULATION_FOLDER')
 	snapfile = simfolder+'/'+db.get_timestep(sim+'/%'+str(step)).path
 	s = pynbody.load(snapfile)
-	create_bh_tipsy_file(s, len(halos), filename, bhdata=bhdata)
+	slfile_list = glob.glob(os.path.join(simfolder+'/'+sim,'*.starlog'))
+	if (len(slfile_list)):
+		slfile = slfile_list[0]
+	else:
+		raise IOError("starlog file not found!")
+
+	create_bh_tipsy_file(s, len(halos), filename+'.'+str(step), bhdata=bhdata)
+	create_bh_starlog(s, slfile, bhdata, filename+'.starlog')
+	return
 
 def insert_tipsy_array_file(snap, array_name, values, binary=True, filename=None):
 	if type(snap) == pynbody.snapshot.tipsy.TipsySnap:
@@ -112,7 +120,7 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None):
 				s.infer_original_units(s.s[key].units))
 		else:
 			new_snap.s[key] = pynbody.array.SimArray(
-				np.append(np.asarray(s.s[key]),np.asarray(bhvals)).reshape(ashape))
+				np.append(np.asarray(s.s[key]),np.asarray(bhvals)).reshape(ashape))?
 
 	new_snap._byteswap = s._byteswap
 	new_snap.properties = s.properties
@@ -136,6 +144,7 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 	print('getting data from ', snapfile)
 	s = pynbody.load(snapfile)
 	h = s.halos(dosort=True)
+	iord_star_max = s.s['iord'].max()
 
 	bhdata = {}
 	units = {}
@@ -143,6 +152,7 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		bhdata[key] = []
 		units[key] = ''
 
+	bhcount = 1
 	for hh in halo_numbers:
 		print("getting BH data for halo", hh)
 		target = db.get_halo(sim+'/%'+str(step)+'/'+str(hh))
@@ -172,8 +182,10 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		bhdata['rung'].append(6) #guess at a reasonable BH rung just in case
 		bhdata['eps'].append(ht.s['eps'].min())
 		bhdata['mass'].append(bhmass)
+		bhdata['iord'].append(iord_star_max+bhcount)
+		bhcount+=1
 		for key in bhdata.keys(): #fill in the rest of the available auxillary data with zeros
-			if key not in ['pos','vel','mass','eps','tform','rung','phi']:
+			if key not in ['pos','vel','mass','eps','tform','rung','phi', 'iord']:
 				bhdata[key].append(0)
 
 	units['mass'] = 'Msol' #the BH masses are always expected to be given in solar masses just to keep things user friendly
@@ -186,6 +198,64 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 
 	return bhdata
 
+
+def get_starlog_meta(sl):
+	with open(sl._logfile, 'r') as g:
+		read_metadata = False
+		structure_names = []
+		structure_formats = []
+		for line in g:
+			if line.startswith('# end starlog data'):
+				read_metadata = False
+			if read_metadata:
+				meta_name, meta_type = line.strip('#').split()
+				meta_name = sl._infer_name_from_tipsy_log(meta_name)
+				structure_names.append(meta_name)
+				structure_formats.append(meta_type)
+			if line.startswith('# starlog data:'):
+				read_metadata = True
+	file_structure = np.dtype({'names': structure_names,
+	                           'formats': structure_formats})
+	return file_structure
+
+def create_bh_starlog(snap, sl, bhdata, filename):
+	f = pynbody.util.open_(filename)
+	file_structure = get_starlog_meta(sl)
+	if sl._byteswap:
+		f.write(struct.pack(">i", file_structure.itemsize))
+	else:
+		f.write(struct.pack("i", file_structure.itemsize))
+
+	sluse = np.where(np.in1d(sl['iord'], snap.s['iord']))[0]
+
+	nstar_orig = len(sluse)
+	if nstar_orig != len(snap.s):
+		print("WARNING! STAR PARTICLE NUMBERS DON'T MATCH UP!")
+
+	sldata = np.zeros(len(sluse)+len(bhdata), dtype=file_structure)
+	for key in file_structure.names:
+		sldata[key][:len(sluse)] = sl[key][sluse]
+
+	#add in bh data that's meaningful
+	sldata['x'][bhdata['pos'][:,0].astype(file_structure['x']))
+	sldata['y'].append(bhdata['pos'][:,1].astype(file_structure['y']))
+	sldata['z'].append(bhdata['pos'][:,2].astype(file_structure['z']))
+	sldata['vx'].append(bhdata['vel'][:, 0].astype(file_structure['vx']))
+	sldata['vy'].append(bhdata['vel'][:, 1].astype(file_structure['vy']))
+	sldata['vz'].append(bhdata['vel'][:, 2].astype(file_structure['vz']))
+	sldata['massform'].append(bhdata['mass'].astype(file_structure['mass']))
+	sldata['iord'].append(bhdata['iord'].astype(file_structure['iord']))
+	sldata['tform'].append(bhdata['tform'].astype(file_structure['tform']))
+
+	for key in sldata.keys(): #add in meaningless BH data for filler space
+		sldata[key] = np.append(np.zeros(len(bhdata['iord'])).astype(file_structure[key]))
+
+	if sl._byteswap:
+		sldata.byteswap().tofile(f)
+	else:
+		sldata.tofile(f)
+	f.close()
+	return
 
 
 
