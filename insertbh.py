@@ -237,6 +237,7 @@ def create_bh_starlog(snap, sl, bhdata, filename):
 	sluse = np.where(np.in1d(sl['iord'], snap.s['iord']))[0]
 
 	nstar = len(sluse)
+	print("creating a starlog file for ", nstar, "stars plus ", len(bhdata['iord']), "BHs!")
 	if nstar != len(snap.s):
 		print("WARNING! STAR PARTICLE NUMBERS DON'T MATCH UP!")
 
