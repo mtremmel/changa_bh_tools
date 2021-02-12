@@ -228,8 +228,8 @@ def create_bh_starlog(snap, sl, bhdata, filename):
 
 	sluse = np.where(np.in1d(sl['iord'], snap.s['iord']))[0]
 
-	nstar_orig = len(sluse)
-	if nstar_orig != len(snap.s):
+	nstar = len(sluse)
+	if nstar != len(snap.s):
 		print("WARNING! STAR PARTICLE NUMBERS DON'T MATCH UP!")
 
 	sldata = np.zeros(len(sluse)+len(bhdata), dtype=file_structure)
@@ -237,18 +237,18 @@ def create_bh_starlog(snap, sl, bhdata, filename):
 		sldata[key][:len(sluse)] = sl[key][sluse]
 
 	#add in bh data that's meaningful
-	sldata['x'][bhdata['pos'][:,0].astype(file_structure['x']))
-	sldata['y'].append(bhdata['pos'][:,1].astype(file_structure['y']))
-	sldata['z'].append(bhdata['pos'][:,2].astype(file_structure['z']))
-	sldata['vx'].append(bhdata['vel'][:, 0].astype(file_structure['vx']))
-	sldata['vy'].append(bhdata['vel'][:, 1].astype(file_structure['vy']))
-	sldata['vz'].append(bhdata['vel'][:, 2].astype(file_structure['vz']))
-	sldata['massform'].append(bhdata['mass'].astype(file_structure['mass']))
-	sldata['iord'].append(bhdata['iord'].astype(file_structure['iord']))
-	sldata['tform'].append(bhdata['tform'].astype(file_structure['tform']))
+	sldata['x'][nstar:] = bhdata['pos'][:,0].astype(file_structure['x'])
+	sldata['y'][nstar:] = bhdata['pos'][:,1].astype(file_structure['y'])
+	sldata['z'][nstar:] = bhdata['pos'][:,2].astype(file_structure['z'])
+	sldata['vx'][nstar:] = bhdata['vel'][:, 0].astype(file_structure['vx'])
+	sldata['vy'][nstar:] = bhdata['vel'][:, 1].astype(file_structure['vy'])
+	sldata['vz'][nstar:] = bhdata['vel'][:, 2].astype(file_structure['vz'])
+	sldata['massform'][nstar:] = bhdata['mass'].astype(file_structure['mass'])
+	sldata['iord'][nstar:] = bhdata['iord'].astype(file_structure['iord'])
+	sldata['tform'][nstar:] = bhdata['tform'].astype(file_structure['tform'])
 
 	for key in sldata.keys(): #add in meaningless BH data for filler space
-		sldata[key] = np.append(np.zeros(len(bhdata['iord'])).astype(file_structure[key]))
+		sldata[key][nstar:] = np.zeros(len(bhdata['iord'])).astype(file_structure[key])
 
 	if sl._byteswap:
 		sldata.byteswap().tofile(f)
