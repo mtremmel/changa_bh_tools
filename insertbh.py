@@ -250,15 +250,24 @@ def create_bh_starlog(snap, sl, bhdata, filename):
 		sldata[key][:nstar] = sl[key][sluse]
 
 	#add in bh data that's meaningful
-	sldata['x'][nstar:] = bhdata['pos'][:,0].astype(file_structure['x'])
-	sldata['y'][nstar:] = bhdata['pos'][:,1].astype(file_structure['y'])
-	sldata['z'][nstar:] = bhdata['pos'][:,2].astype(file_structure['z'])
-	sldata['vx'][nstar:] = bhdata['vel'][:, 0].astype(file_structure['vx'])
-	sldata['vy'][nstar:] = bhdata['vel'][:, 1].astype(file_structure['vy'])
-	sldata['vz'][nstar:] = bhdata['vel'][:, 2].astype(file_structure['vz'])
-	sldata['massform'][nstar:] = bhdata['mass'].astype(file_structure['mass'])
-	sldata['iord'][nstar:] = bhdata['iord'].astype(file_structure['iord'])
-	sldata['tform'][nstar:] = bhdata['tform'].astype(file_structure['tform'])
+	sldata['x'][nstar:] = bhdata['pos'].in_units(snap.infer_original_units(bhdata['pos'].units),
+	                                             a = snap.properties['a'])[:,0].astype(file_structure['x'])
+	sldata['y'][nstar:] = bhdata['pos'].in_units(snap.infer_original_units(bhdata['pos'].units),
+	                                             a = snap.properties['a'])[:,1].astype(file_structure['y'])
+	sldata['z'][nstar:] = bhdata['pos'].in_units(snap.infer_original_units(bhdata['pos'].units),
+	                                             a = snap.properties['a'])[:,2].astype(file_structure['z'])
+	sldata['vx'][nstar:] = bhdata['vel'].in_units(snap.infer_original_units(bhdata['vel'].units),
+	                                             a = snap.properties['a'])[:, 0].astype(file_structure['vx'])
+	sldata['vy'][nstar:] = bhdata['vel'].in_units(snap.infer_original_units(bhdata['vel'].units),
+	                                             a = snap.properties['a'])[:, 1].astype(file_structure['vy'])
+	sldata['vz'][nstar:] = bhdata['vel'].in_units(snap.infer_original_units(bhdata['vel'].units),
+	                                             a = snap.properties['a'])[:, 2].astype(file_structure['vz'])
+	sldata['massform'][nstar:] = bhdata['mass'].in_units(snap.infer_original_units(bhdata['mass'].units),
+	                                             a = snap.properties['a']).astype(file_structure['massform'])
+	sldata['iord'][nstar:] = bhdata['iord'].in_units(snap.infer_original_units(bhdata['iord'].units),
+	                                             a = snap.properties['a']).astype(file_structure['iord'])
+	sldata['tform'][nstar:] = bhdata['tform'].in_units(snap.infer_original_units(bhdata['tform'].units),
+	                                             a = snap.properties['a']).astype(file_structure['tform'])
 
 	for key in sldata.keys(): #add in meaningless BH data for filler space
 		sldata[key][nstar:] = np.zeros(len(bhdata['iord'])).astype(file_structure[key])
