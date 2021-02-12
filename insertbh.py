@@ -144,7 +144,7 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 	print('getting data from ', snapfile)
 	s = pynbody.load(snapfile)
 	h = s.halos(dosort=True)
-	iord_star_max = s.s['iord'].max()
+	iord_max = s['iord'].max()
 
 	bhdata = {}
 	units = {}
@@ -182,7 +182,7 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		bhdata['rung'].append(6) #guess at a reasonable BH rung just in case
 		bhdata['eps'].append(ht.s['eps'].min())
 		bhdata['mass'].append(bhmass)
-		bhdata['iord'].append(iord_star_max+bhcount)
+		bhdata['iord'].append(iord_max+bhcount)
 		bhcount+=1
 		for key in bhdata.keys(): #fill in the rest of the available auxillary data with zeros
 			if key not in ['pos','vel','mass','eps','tform','rung','phi', 'iord']:
