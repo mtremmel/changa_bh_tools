@@ -268,7 +268,9 @@ def create_bh_starlog(snap, sl, bhdata, filename):
 	sldata['tform'][nstar:] = bhdata['tform'].in_units(snap.infer_original_units(bhdata['tform'].units),
 	                                             a = snap.properties['a']).astype(file_structure['tform'])
 
-	for key in file_structure.names and key not in ['x','y','z','vx','vy','vz', 'massform','tform','iord']: #add in meaningless BH data for filler space
+	# add in meaningless BH data for filler space
+	for key in file_structure.names \
+			and key not in ['x','y','z','vx','vy','vz', 'massform','tform','iord']:
 		sldata[key][nstar:] = np.zeros(len(bhdata['iord'])).astype(file_structure[key])
 
 	print("writing starlog data...")
