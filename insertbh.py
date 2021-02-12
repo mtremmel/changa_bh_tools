@@ -186,7 +186,7 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		bhdata['eps'].append(ht.s['eps'].min())
 		bhdata['mass'].append(bhmass)
 		if 'massform' in bhdata.keys():
-			bhdata['masform'].append(bhmass)
+			bhdata['massform'].append(bhmass)
 		bhdata['iord'].append(iord_max+bhcount)
 		bhcount+=1
 		for key in bhdata.keys(): #fill in the rest of the available auxillary data with zeros
