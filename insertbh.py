@@ -127,7 +127,7 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None):
 	new_snap._byteswap = s._byteswap
 	new_snap.properties = s.properties
 	print("writing data...")
-	new_snap.write(fmt=pynbody.snapshot.tipsy.TipsySnap, filename=filename)
+	new_snap.write(fmt=pynbody.snapshot.tipsy.TipsySnap, filename=filename, binary_aux_arrays=True)
 
 
 def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
