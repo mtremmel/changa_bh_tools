@@ -245,7 +245,7 @@ def create_bh_starlog(snap, sl, bhdata, filename):
 	if nstar != len(snap.s):
 		print("WARNING! STAR PARTICLE NUMBERS DON'T MATCH UP!")
 
-	sldata = np.zeros(len(sluse)+len(bhdata), dtype=file_structure)
+	sldata = np.zeros(len(sluse)+len(bhdata['iord']), dtype=file_structure)
 	for key in file_structure.names:
 		sldata[key][:nstar] = sl[key][sluse]
 
