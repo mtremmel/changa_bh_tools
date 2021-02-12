@@ -264,8 +264,7 @@ def create_bh_starlog(snap, sl, bhdata, filename):
 	                                             a = snap.properties['a'])[:, 2].astype(file_structure['vz'])
 	sldata['massform'][nstar:] = bhdata['mass'].in_units(snap.infer_original_units(bhdata['mass'].units),
 	                                             a = snap.properties['a']).astype(file_structure['massform'])
-	sldata['iord'][nstar:] = bhdata['iord'].in_units(snap.infer_original_units(bhdata['iord'].units),
-	                                             a = snap.properties['a']).astype(file_structure['iord'])
+	sldata['iord'][nstar:] = bhdata['iord'].astype(file_structure['iord'])
 	sldata['tform'][nstar:] = bhdata['tform'].in_units(snap.infer_original_units(bhdata['tform'].units),
 	                                             a = snap.properties['a']).astype(file_structure['tform'])
 
