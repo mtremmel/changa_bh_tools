@@ -190,7 +190,7 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		bhdata['iord'].append(iord_max+bhcount)
 		bhcount+=1
 		for key in bhdata.keys(): #fill in the rest of the available auxillary data with zeros
-			if key not in ['pos','vel','mass','eps','tform','rung','phi', 'iord']:
+			if key not in ['pos','vel','mass','eps','tform','rung','phi', 'iord', 'massform']:
 				bhdata[key].append(0)
 
 	units['mass'] = 'Msol' #the BH masses are always expected to be given in solar masses just to keep things user friendly
