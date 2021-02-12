@@ -120,7 +120,7 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None):
 				s.infer_original_units(s.s[key].units))
 		else:
 			new_snap.s[key] = pynbody.array.SimArray(
-				np.append(np.asarray(s.s[key]),np.asarray(bhvals)).reshape(ashape))?
+				np.append(np.asarray(s.s[key]),np.asarray(bhvals)).reshape(ashape))
 
 	new_snap._byteswap = s._byteswap
 	new_snap.properties = s.properties
