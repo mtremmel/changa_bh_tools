@@ -291,7 +291,7 @@ def select_gas_particles(ht, bhmass, rmax):
 	print("gas particle iord", new_mass_iord, "selected for new mass ", new_mass, "from ",
 	      cen_gas[osort[i]]['mass'].in_units('Msol'))
 
-	return delete_iords, new_mass, new_mass_iord.in_units(ht.infer_original_units('Msol'))
+	return delete_iords, new_mass.in_units(ht.infer_original_units('Msol')), new_mass_iord
 
 
 
