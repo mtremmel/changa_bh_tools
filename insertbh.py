@@ -257,6 +257,7 @@ def get_starlog_meta(sl):
 	return file_structure
 
 def select_gas_particles(ht, bhmass, rmax):
+	print(rmax, " rmax!")
 	cen_gas = ht.g[pynbody.filt.LowPass('r',rmax)]
 	tot_mass = cen_gas['mass'].in_units('Msol').sum()
 	if tot_mass < bhmass:
