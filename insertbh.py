@@ -186,7 +186,7 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		ht.wrap()
 
 		#select particles to delete or remove mass from to create BH
-		delete_part, new_mass_part, new_mass_iord_part = select_gas_particles(ht, bhmass, 2*ht.s['eps'][0].in_units('a kpc'))
+		delete_part, new_mass_part, new_mass_iord_part = select_gas_particles(ht, bhmass, 2*ht.s['eps'].min().in_units('a kpc'))
 		delete_iords.append(delete_part)
 		new_mass_iords.append(new_mass_iord_part)
 		new_mass.append(new_mass_part)
