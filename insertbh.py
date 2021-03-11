@@ -283,7 +283,7 @@ def select_gas_particles(ht, bhmass, rmax):
 		new_mass = pynbody.array.SimArray(cen_gas[osort[i]]['mass'].in_units('Msol') - still_needed, 'Msol')
 		new_mass_iord = cen_gas[osort[i]]['iord']
 
-	print(len(delete_iords), " gas particles have been selected for deletion with max distance ",
+	print(delete_iords, " gas particles have been selected for deletion with max distance ",
 	      cen_gas['r'][osort[idelete]].max(), "and minimum density ",
 	      cen_gas['rho'][osort[idelete]].min())
 	print("gas particle iord", new_mass_iord, "selected for new mass ", new_mass, "from ",
