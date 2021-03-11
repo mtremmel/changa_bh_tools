@@ -269,9 +269,7 @@ def select_gas_particles(ht, bhmass, rmax):
 	mgas_cumsum = np.cumsum(cen_gas['mass'][osort].in_units('Msol'))
 
 	idelete = np.where(mgas_cumsum<=bhmass)[0]
-	print(idelete)
-	print(mgas_cumsum[0], mgas_cumsum[32])
-	delete_iords = cen_gas['iord'][osort[idelete[-1]]]
+	delete_iords = cen_gas['iord'][osort[idelete]]
 	new_mass = -1
 	new_mass_iord = -1
 
