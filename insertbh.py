@@ -284,8 +284,8 @@ def select_gas_particles(ht, bhmass, rmax):
 		new_mass_iord = cen_gas[osort[i]]['iord']
 
 	print(delete_iords, " gas particles have been selected for deletion with max distance ",
-	      cen_gas['r'][osort[idelete]].max(), "and minimum density ",
-	      cen_gas['rho'][osort[idelete]].min())
+	      cen_gas['r'][osort[idelete]].in_units('kpc').max(), "kpc and minimum density ",
+	      cen_gas['rho'][osort[idelete]].in_units('m_p cm**-3').min(), " mp/cm^3")
 	print("gas particle iord", new_mass_iord, "selected for new mass ", new_mass, "from ",
 	      cen_gas[osort[i]]['mass'].in_units('Msol'))
 
