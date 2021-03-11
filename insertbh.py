@@ -5,7 +5,8 @@ import os, sys, glob
 
 def insert_bhs(sim, step, halos, filename, bhmass=1e5, part_center=32):
 	import tangos as db
-	bhdata = create_central_bh(sim, step, halos, part_center=part_center, bhmass=bhmass)
+	bhdata, delete_iords, new_mass, new_mass_iords = create_central_bh(sim, step, halos, part_center=part_center, bhmass=bhmass)
+
 	simfolder = os.getenv('TANGOS_SIMULATION_FOLDER')
 	snapfile = simfolder+'/'+db.get_timestep(sim+'/%'+str(step)).path
 	s = pynbody.load(snapfile)
@@ -60,7 +61,7 @@ def insert_tipsy_array_file(snap, array_name, values, binary=True, filename=None
 		f.close()
 
 
-def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None):
+def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None, delete_iords=None, newmass_iords=None, newmasses=None):
 	# read in original snapshot
 	if type(snap) == pynbody.snapshot.tipsy.TipsySnap:
 		s = snap
@@ -69,6 +70,21 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None):
 	ndm = len(s.dm)
 	ng = len(s.g)
 	ns = len(s.s)
+
+	#remove deleted gas particles flagged to 'make' the black hole
+	if to_delete:
+		ng -= len(to_delete)
+		s.g = s.g[(np.in1d(s.g['iord'], to_delete)==False)]
+
+	#assign new masses to partially deleted gas mass
+	#this mass is assumed to have gone into 'making' the black hole
+	if newmasses:
+		if not newmass_iords:
+			raise ValueError("newmass_iords must come with list of new masses")
+		if len(newmasses)!=len(newmass_iords):
+			raise ValueError("list newmass_iords must have same length as newmasses!")
+		for i in range(len(newmass_iords))
+			s.g[(s.g['iord']==newmass_iords[i])]['mass'] = newmasses[i]
 
 	#check provided data
 	if bhdata:
@@ -156,6 +172,9 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		units[key] = ''
 
 	bhcount = 1
+	delete_iords = []
+	new_mass_iords = []
+	new_mass = []
 	for hh in halo_numbers:
 		print("getting BH data for halo", hh)
 		target = db.get_halo(sim+'/%'+str(step)+'/'+str(hh))
@@ -166,6 +185,11 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		ht['pos'] -= position.in_units(s.infer_original_units('kpc'), a = s.properties['a'])
 		ht.wrap()
 
+		#select particles to delete or remove mass from to create BH
+		delete_part, new_mass_part, new_mass_iord_part = select_gas_particles(ht, bhmass, 2*ht.s['eps'][0].in_units('a kpc'))
+		delete_iords.append(delete_part)
+		new_mass_iords.append(new_mass_iord_part)
+		new_mass.append(new_mass_part)
 
 		r_sdm = ht[(pynbody.filt.FamilyFilter(pynbody.family.star)|pynbody.filt.FamilyFilter(pynbody.family.dm))]['r']
 		phi_sdm = ht[(pynbody.filt.FamilyFilter(pynbody.family.star)|pynbody.filt.FamilyFilter(pynbody.family.dm))]['phi']
@@ -207,7 +231,7 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 	for key in bhdata.keys():
 		bhdata[key] = pynbody.array.SimArray(bhdata[key], units[key])
 
-	return bhdata
+	return bhdata, delete_iords, new_mass, new_mass_iords
 
 
 def get_starlog_meta(sl):
@@ -229,6 +253,44 @@ def get_starlog_meta(sl):
 	file_structure = np.dtype({'names': structure_names,
 	                           'formats': structure_formats})
 	return file_structure
+
+def select_gas_particles(ht, bhmass, rmax=0.5):
+	cen_gas = ht.g[pynbody.filt.LowPass('r',rmax)]
+	tot_mass = cen_gas['mass'].in_units('Msol').sum()
+	if tot_mass < bhmass:
+		raise RuntimeError('BH mass exceeds gas mass nearby!')
+	osort = np.argsort(cen_gas['rho']) #sort by density
+	osort = osort[::-1] #sort in descending order
+
+
+	mgas_cumsum = np.cumsum(cen_gas['mass'][osort].in_units('Msol'))
+
+	idelete = np.where(mgas_cumsum<=bhmass)[0]
+	delete_iords = cen_gas['iord'][osort[idelete[-1]]]
+	new_mass = -1
+	new_mass_iord = -1
+
+	still_needed = bhmass - mgas_cumsum[idelete[-1]]
+	i = idelete[-1]+1
+	if still_needed / cen_gas[osort[i]]['mass'].in_units('Msol') > 1:
+		raise RuntimeError("Error! Gas should have already been deleted!")
+	if still_needed / cen_gas[osort[i]]['mass'].in_units('Msol') > 0.8:
+		delete_iords.append(cen_gas[osort[i]]['iord'])
+	else:
+		new_mass = pynbody.array.SimArray(cen_gas[osort[i]]['mass'].in_units('Msol') - still_needed, 'Msol')
+		new_mass_iord = cen_gas[osort[i]]['iord']
+
+	print(len(delete_iords), " gas particles have been selected for deletion with max distance ",
+	      cen_gas['r'][osort[idelete]].max(), "and minimum density ",
+	      cen_gas['rho'][osort[idelete]].min())
+	print("gas particle iord", new_mass_iord, "selected for new mass ", new_mass, "from ",
+	      cen_gas[osort[i]]['mass'].in_units('Msol'))
+
+	return delete_iords, new_mass, new_mass_iord.in_units(ht.infer_original_units('Msol'))
+
+
+
+
 
 def create_bh_starlog(snap, sl, bhdata, filename):
 	f = pynbody.util.open_(filename, 'wb')
