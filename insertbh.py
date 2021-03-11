@@ -18,7 +18,9 @@ def insert_bhs(sim, step, halos, filename, bhmass=1e5, part_center=32):
 	print("reading starlog!")
 	sl = pynbody.snapshot.tipsy.StarLog(slfile)
 	print("creating tipsy file...")
-	create_bh_tipsy_file(s, len(halos), filename+'.'+str(step), bhdata=bhdata)
+	create_bh_tipsy_file(s, len(halos), filename+'.'+str(step),
+	                     bhdata=bhdata, delete_iords=delete_iords,
+	                     newmass_iords=new_mass_iords, newmasses=new_mass)
 	create_bh_starlog(s, sl, bhdata, filename+'.starlog')
 	return
 
@@ -72,9 +74,9 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None, delete_iords=None, n
 	ns = len(s.s)
 
 	#remove deleted gas particles flagged to 'make' the black hole
-	if to_delete:
-		ng -= len(to_delete)
-		s.g = s.g[(np.in1d(s.g['iord'], to_delete)==False)]
+	if delete_iords:
+		ng -= len(delete_iords)
+		s.g = s.g[(np.in1d(s.g['iord'], delete_iords)==False)]
 
 	#assign new masses to partially deleted gas mass
 	#this mass is assumed to have gone into 'making' the black hole
@@ -186,7 +188,7 @@ def create_central_bh(sim, step, halo_numbers, part_center=32, bhmass=1e5):
 		ht.wrap()
 
 		#select particles to delete or remove mass from to create BH
-		delete_part, new_mass_part, new_mass_iord_part = select_gas_particles(ht, bhmass, 2*ht.s['eps'].min().in_units('a kpc'))
+		delete_part, new_mass_part, new_mass_iord_part = select_gas_particles(ht, bhmass, 2*ht.s['eps'].min())
 		delete_iords.append(delete_part)
 		new_mass_iords.append(new_mass_iord_part)
 		new_mass.append(new_mass_part)
@@ -254,7 +256,7 @@ def get_starlog_meta(sl):
 	                           'formats': structure_formats})
 	return file_structure
 
-def select_gas_particles(ht, bhmass, rmax=0.5):
+def select_gas_particles(ht, bhmass, rmax):
 	cen_gas = ht.g[pynbody.filt.LowPass('r',rmax)]
 	tot_mass = cen_gas['mass'].in_units('Msol').sum()
 	if tot_mass < bhmass:
