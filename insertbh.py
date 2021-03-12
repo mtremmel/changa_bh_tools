@@ -6,7 +6,7 @@ import os, sys, glob
 def insert_bhs(sim, step, halos, filename, bhmass=1e5, part_center=32):
 	import tangos as db
 	bhdata, delete_iords, new_mass, new_mass_iords = create_central_bh(sim, step, halos, part_center=part_center, bhmass=bhmass)
-
+	print("gas particles set for deletion:", delete_iords)
 	simfolder = os.getenv('TANGOS_SIMULATION_FOLDER')
 	snapfile = simfolder+'/'+db.get_timestep(sim+'/%'+str(step)).path
 	s = pynbody.load(snapfile)
