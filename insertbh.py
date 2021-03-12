@@ -94,13 +94,13 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None, delete_iords=None, n
 			s._load_array(key, filename=s._filename+'.'+key)
 
 	# remove deleted gas particles flagged to 'make' the black hole
-	if delete_iords:
+	if delete_iords is not None:
 		ng -= len(delete_iords) #make sure we create a tipsy file with the right number of particles!
 		s.g = s.g[(np.in1d(s.g['iord'], delete_iords) == False)]
 
 	# assign new masses to partially deleted gas mass
 	#  this mass is assumed to have gone into 'making' the black hole
-	if newmasses:
+	if newmasses is not None:
 		if not newmass_iords:
 			raise ValueError("newmass_iords must come with list of new masses")
 		if len(newmasses) != len(newmass_iords):
