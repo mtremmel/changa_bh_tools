@@ -101,7 +101,7 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None, delete_iords=None, n
 	# assign new masses to partially deleted gas mass
 	#  this mass is assumed to have gone into 'making' the black hole
 	if newmasses is not None:
-		if not newmass_iords:
+		if newmass_iords is None:
 			raise ValueError("newmass_iords must come with list of new masses")
 		if len(newmasses) != len(newmass_iords):
 			raise ValueError("list newmass_iords must have same length as newmasses!")
