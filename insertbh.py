@@ -95,6 +95,7 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None, delete_iords=None, n
 
 	# remove deleted gas particles flagged to 'make' the black hole
 	if delete_iords is not None:
+		print("removing deleted gas particles from original data...")
 		ng -= len(delete_iords) #make sure we create a tipsy file with the right number of particles!
 		s.g = s.g[(np.in1d(s.g['iord'], delete_iords) == False)]
 
@@ -105,8 +106,11 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None, delete_iords=None, n
 			raise ValueError("newmass_iords must come with list of new masses")
 		if len(newmasses) != len(newmass_iords):
 			raise ValueError("list newmass_iords must have same length as newmasses!")
+		print("re-massing gas particles from original data...")
 		for i in range(len(newmass_iords)):
+			print('new mass for gas particle', newmass_iords[i])
 			s.g[(s.g['iord'] == newmass_iords[i])]['mass'] = newmasses[i]
+			print('new mass:', s.g[(s.g['iord'] == newmass_iords[i])]['mass'])
 
 	# create a new snapshot from scratch
 	new_snap = pynbody.new(dm=ndm, gas=ng, star=ns+nbhs, order='gas,dm,star')
