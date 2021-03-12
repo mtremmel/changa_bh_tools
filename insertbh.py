@@ -101,16 +101,6 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None, delete_iords=None, n
 
 	# assign new masses to partially deleted gas mass
 	#  this mass is assumed to have gone into 'making' the black hole
-	if newmasses is not None:
-		if newmass_iords is None:
-			raise ValueError("newmass_iords must come with list of new masses")
-		if len(newmasses) != len(newmass_iords):
-			raise ValueError("list newmass_iords must have same length as newmasses!")
-		print("re-massing gas particles from original data...")
-		for i in range(len(newmass_iords)):
-			print('new mass for gas particle', newmass_iords[i])
-			s.g[(s.g['iord'] == newmass_iords[i])]['mass'] = newmasses[i]
-			print('new mass:', s.g[(s.g['iord'] == newmass_iords[i])]['mass'])
 
 	# create a new snapshot from scratch
 	new_snap = pynbody.new(dm=ndm, gas=ng, star=ns+nbhs, order='gas,dm,star')
@@ -127,6 +117,18 @@ def create_bh_tipsy_file(snap, nbhs, filename, bhdata=None, delete_iords=None, n
 			new_snap.g[key] = s.g[key].in_units(s.infer_original_units(s.g[key].units), a=s.properties['a'])
 		else:
 			new_snap.g[key] = s.g[key]
+
+	if newmasses is not None:
+		if newmass_iords is None:
+			raise ValueError("newmass_iords must come with list of new masses")
+		if len(newmasses) != len(newmass_iords):
+			raise ValueError("list newmass_iords must have same length as newmasses!")
+		print("re-massing gas particles from original data...")
+		for i in range(len(newmass_iords)):
+			print('new mass for gas particle', newmass_iords[i])
+			new_snap.g[(new_snap.g['iord'] == newmass_iords[i])]['mass'] = newmasses[i]
+			print('new mass:', new_snap.g[(new_snap.g['iord'] == newmass_iords[i])]['mass'])
+
 	for key in s.s.loadable_keys():
 		print("loading and adding new star data for", key)
 		if bhdata and key in bhdata.keys():
