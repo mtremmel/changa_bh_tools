@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pynbody
-from util import param_reader
+from ..util import param_reader
 
 from bhtools.util import readcol
 
@@ -17,7 +17,7 @@ class BlackHoles(object):
 
 		if paramfile is None:
 			self.paramfile = simname+'.param'
-		else
+		else:
 			self.paramfile = paramfile
 
 		if not os.path.exists(self.filename):
