@@ -2,7 +2,7 @@ from distutils.core import setup
 
 
 DESCRIPTION = 'Tools to help analyze black holes in large nbody simulations (in conjunction with pynbody)'
-#LONG_DESCRIPTION = open('README.md').read()
+LONG_DESCRIPTION = ''#open('README.md').read()
 NAME = 'bhtools'
 VERSION = '1.0'
 AUTHOR = 'Michael Tremmel'
