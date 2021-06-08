@@ -11,7 +11,7 @@ class BlackHoles(object):
 
 	def _col_data(self, filename):
 		iord, time, step, mass, x, y, z, vx, vy, vz, pot, Mdot, dM, dE, dt, dMaccum, dEaccum, a \
-			= readcol.readcol(self.filename, twod=False, nanval=0.0)
+			= readcol.readcol(filename, twod=False, nanval=0.0)
 
 		tsort = np.argsort(time)
 		data_dict = {
@@ -42,7 +42,7 @@ class BlackHoles(object):
 	def __init__(self, simname, filename=None, paramfile=None):
 		self.simname = simname
 		if filename is None:
-			self.filename = simname+'.BackHoles'
+			self.filename = simname+'.BlackHoles'
 		else:
 			self.filename = filename
 
