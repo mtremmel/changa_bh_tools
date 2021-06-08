@@ -113,7 +113,7 @@ class BlackHoles(object):
 
 	def get_distance(self, ID1, ID2, comove=True):
 		time1 = self[(ID1,'time')]
-		time2 = self[(ID2,'time'))
+		time2 = self[(ID2,'time')]
 		x1 = self[(ID1, 'x')]
 		x2 = self[(ID2, 'x')]
 		y1 = self[(ID1, 'y')]
