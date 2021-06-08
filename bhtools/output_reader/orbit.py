@@ -86,7 +86,7 @@ class BlackHoles(object):
 			select_id = item[0]
 			select_data = item[1]
 
-			if type(select_id)!=int or type(select_data)!=str:
+			if type(select_id)!=np.int64 or type(select_data)!=str:
 				raise ValueError("invalid arguments to __getitem__, use orbit_object[(iord,'key')]")
 			if select_data not in self._data.keys():
 				raise ValueError(select_data, " not found in BH data")
