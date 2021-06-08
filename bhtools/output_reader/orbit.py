@@ -44,12 +44,12 @@ class BlackHoles(object):
 		self._data['x'] = self._data['x'].in_units('kpc', a=scale)
 		self._data['y'] = self._data['y'].in_units('kpc', a=scale)
 		self._data['z'] = self._data['z'].in_units('kpc', a=scale)
-		self._data['pos'] = self._data['pos'].in_units('kpc', a=scale)
+		self._data['pos'] = self._data['pos'].in_units('kpc', a=np.concatenate([[scale],[scale],[scale]]).T)
 
 		self._data['vx'] = self._data['vx'].in_units('km s**-1', a=scale)
 		self._data['vy'] = self._data['vy'].in_units('km s**-1', a=scale)
 		self._data['vz'] = self._data['vz'].in_units('km s**-1', a=scale)
-		self._data['vel'] = self._data['vel'].in_units('km s**-1', a=scale)
+		self._data['vel'] = self._data['vel'].in_units('km s**-1', a=np.concatenate([[scale],[scale],[scale]]).T)
 
 		self._data['dMtot'] = self._data['dMtot'].in_units('Msol')
 		self._data['dM'] = self._data['dM'].in_units('Msol')
