@@ -54,3 +54,10 @@ class ParamFile(object):
 			self.denunit += " a^-3"
 			self.velunit_st += " a"
 			self.potunit_st += " a^-1"
+
+	def get_boxsize(self):
+		'''
+		:return: a unit object based on the kpc units of the simulation in the param file
+		returned in units of co-moving Mpc
+		'''
+		return pynbody.units.Unit(str(self.params['KpcUnit']/1e3)+' a Mpc')
