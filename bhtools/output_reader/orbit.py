@@ -39,6 +39,31 @@ class BlackHoles(object):
 
 		return data_dict
 
+	def _phys_conv(self):
+		scale = self._data['a']
+		self._data['x'] = self._data['x'].in_units('kpc', a=scale)
+		self._data['y'] = self._data['y'].in_units('kpc', a=scale)
+		self._data['z'] = self._data['z'].in_units('kpc', a=scale)
+		self._data['pos'] = self._data['pos'].in_units('kpc', a=scale)
+
+		self._data['vx'] = self._data['vx'].in_units('km s**-1', a=scale)
+		self._data['vy'] = self._data['vy'].in_units('km s**-1', a=scale)
+		self._data['vz'] = self._data['vz'].in_units('km s**-1', a=scale)
+		self._data['vel'] = self._data['vel'].in_units('km s**-1', a=scale)
+
+		self._data['dMtot'] = self._data['dMtot'].in_units('Msol')
+		self._data['dM'] = self._data['dM'].in_units('Msol')
+		self._data['mass'] = self._data['mass'].in_units('Msol')
+
+		self._data['mdot'] = self._data['mdot'].in_units('Msol yr**-1')
+
+		self._data['dE'] = self._data['dE'].in_units('cm**2 s**-2 g', a=scale)
+		self._data['dEtot'] = self._data['dEtot'].in_units('cm**2 s**-2 g', a=scale)
+		self._data['pot'] = self._data['dE'].in_units('km**2 s**-2', a=scale)
+
+		self._data['dt'] = self._data['dt'].in_units('Gyr')
+		self._data['time'] = self._data['time'].in_units('Gyr')
+
 	def __init__(self, simname, filename=None, paramfile=None):
 		self.simname = simname
 		if filename is None:
@@ -60,6 +85,8 @@ class BlackHoles(object):
 
 		#read in data from simname.BlackHoles file
 		self._data = self._col_data(self.filename)
+		#convert to physical units
+		self._phys_conv()
 
 		self.bhiords, _id_slice = self._get_iord_slice_ind()
 
