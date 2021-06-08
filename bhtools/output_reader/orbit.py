@@ -55,7 +55,7 @@ class BlackHoles(object):
 			raise RuntimeError("file", self.filename, "not found! Exiting...")
 
 		#load in parameters from the param file - important for units!
-		self.parameters = param_reader.ParamFile(simname)
+		self.parameters = param_reader.ParamFile(self.paramfile)
 
 		#read in data from simname.BlackHoles file
 		self._data = self._col_data(self.filename)

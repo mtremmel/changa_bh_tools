@@ -21,6 +21,7 @@ class ParamFile(object):
 			if line[0] != "#":
 				s = line.split("#")[0].split()
 				self.params[s[0]] = " ".join(s[2:])
+		f.close()
 
 	def __getitem__(self, item):
 		return self.params[item]
