@@ -56,6 +56,7 @@ class BlackHoles(object):
 
 		#load in parameters from the param file - important for units!
 		self.parameters = param_reader.ParamFile(self.paramfile)
+		self.parameters._get_basic_units()
 
 		#read in data from simname.BlackHoles file
 		self._data = self._col_data(self.filename)
