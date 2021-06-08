@@ -59,7 +59,7 @@ class BlackHoles(object):
 
 		self._data['dE'] = self._data['dE'].in_units('cm**2 s**-2 g', a=scale)
 		self._data['dEtot'] = self._data['dEtot'].in_units('cm**2 s**-2 g', a=scale)
-		self._data['pot'] = self._data['dE'].in_units('km**2 s**-2', a=scale)
+		self._data['pot'] = self._data['pot'].in_units('km**2 s**-2', a=scale)
 
 		self._data['dt'] = self._data['dt'].in_units('Gyr')
 		self._data['time'] = self._data['time'].in_units('Gyr')
