@@ -51,10 +51,10 @@ class ParamFile(object):
 
 		#if the simulation is cosmological and co-moving, put in the appropriate a's
 		if 'bComove' in self.params and int(self.params['bComove']) != 0:
-			self.dunit_st += " a"
-			self.denunit += " a^-3"
-			self.velunit_st += " a"
-			self.potunit_st += " a^-1"
+			self.dunit_st *= pynbody.units.a
+			self.denunit *= pynbody.units.a**-3
+			self.velunit_st *= pynbody.units.a
+			self.potunit_st *= pynbody.units.a**-1
 
 	def get_boxsize(self):
 		'''
