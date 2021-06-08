@@ -23,7 +23,7 @@ class BlackHoles(object):
 			'x': pynbody.array.SimArray(x[tsort], self.parameters.dunit_st),
 			'y': pynbody.array.SimArray(y[tsort], self.parameters.dunit_st),
 			'z': pynbody.array.SimArray(z[tsort], self.parameters.dunit_st),
-			'vel': pynbody.array.SimArray(np.concatenate([[vx, vy, vz]]).T, self.parameters.velunit_st),
+			'vel': pynbody.array.SimArray(np.concatenate([[vx[tsort], vy[tsort], vz[tsort]]]).T, self.parameters.velunit_st),
 			'vx': pynbody.array.SimArray(vx[tsort], self.parameters.velunit_st),
 			'vy': pynbody.array.SimArray(vy[tsort], self.parameters.velunit_st),
 			'vz': pynbody.array.SimArray(vz[tsort], self.parameters.velunit_st),
