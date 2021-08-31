@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 import pynbody
-from ..util import param_reader
+from ..util import *
 
 from bhtools.util import readcol
 
@@ -113,7 +113,7 @@ class BlackHoles(object):
 			select_id = item[0]
 			select_data = item[1]
 
-			if type(select_id)!=np.int64 or type(select_data)!=str:
+			if (type(select_id)!=np.int64 and type(select_id)!=int) or type(select_data)!=str:
 				raise ValueError("invalid arguments to __getitem__, use orbit_object[(iord,'key')]")
 			if select_data not in self._data.keys():
 				raise ValueError(select_data, " not found in BH data")
@@ -138,6 +138,20 @@ class BlackHoles(object):
 		ss = ss[sort_]
 		slice_.append(ss)
 		return uvalues, slice_
+
+	def time_smooth(self, iord, prop, nsmooth=10,ret_std=False, dosum=False):
+		std = None
+		if ret_std is True:
+			data, std = smoothdata(self._data[prop][self._bhind[iord]], nsteps=nsmooth, ret_std=True, dosum=dosum)
+		else:
+			data = smoothdata(self._data[prop][self._bhind[iord]], nsteps=nsmooth, dosum=dosum)
+		time = self._data['time'][self._bhind[iord]][int(nsmooth/2)::nsmooth]
+		if len(time)>len(data):
+			time = time[::-1]
+		if std:
+			return data, std, time
+		else:
+			return data, time
 
 	def get_distance(self, ID1, ID2, comove=True):
 		time1 = self[(ID1,'time')]
