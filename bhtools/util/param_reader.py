@@ -29,7 +29,7 @@ class ParamFile(object):
 		return self.params[item]
 
 	def _get_cosmology(self):
-		self.omegaM = self.params['omegaM0']
+		self.omegaM = self.params['dOmega0']
 		self.omegaL = self.params['dLambda']
 		self.h = self.params['dHubble0']
 		hubunit = 10. * self.velunit / self.dunit
