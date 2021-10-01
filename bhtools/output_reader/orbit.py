@@ -98,8 +98,8 @@ class BlackHoles(object):
 
 	def _get_output_cadence(self):
 		t0 = cosmology.getTime(0,self.parameters.h, self.parameters.omegaM, self.parameters.omegaL,unit='Gyr')
-		dt_big = t0 / self.parameters.params['nSteps']
-		dt_out = dt_big / 2**self.parameters.params['iBHSinkOutRung']
+		dt_big = t0 / int(self.parameters.params['nSteps'])
+		dt_out = dt_big / 2**int(self.parameters.params['iBHSinkOutRung'])
 		return pynbody.unit.Units(str(dt_out)+' Gyr')
 
 	def __getitem__(self, item):
