@@ -167,6 +167,12 @@ class BlackHoles(object):
 		mdot_smooth = pynbody.array.SimArray(dMacc,'Msol')/(nsmooth*self.dTout)
 		return mdot_smooth.in_units('Msol yr**-1'), time
 
+	def smoothed_luminosity_history(self, iord, dt='10 Myr', er=0.1):
+		mdot_smooth, time = self.smoothed_accretion_history(iord,dt)
+		csq = phys_const['c'].in_units('cm s**-1')**2
+		lum_smooth = mdot_smooth.in_units('g s**-1') * csq.in_units('erg g**-1') * er
+		return lum_smooth, time
+
 
 	def get_distance(self, ID1, ID2, comove=True):
 		time1 = self[(ID1,'time')]
