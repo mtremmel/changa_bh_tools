@@ -100,7 +100,7 @@ class BlackHoles(object):
 		t0 = cosmology.getTime(0,self.parameters.h, self.parameters.omegaM, self.parameters.omegaL,unit='Gyr')
 		dt_big = t0 / int(self.parameters.params['nSteps'])
 		dt_out = dt_big / 2**int(self.parameters.params['iBHSinkOutRung'])
-		return pynbody.units.Unit(str(dt_out)+' Gyr')
+		return pynbody.units.Unit(str(dt_out)+' Gyr'
 
 	def __getitem__(self, item):
 		'''
@@ -163,9 +163,9 @@ class BlackHoles(object):
 	def smoothed_accretion_history(self, iord, dt='10 Myr'):
 		tsmooth = pynbody.units.Unit(dt)
 		nsmooth = int(tsmooth.ratio(self.dTout))
-		dMacc = self.time_smooth(iord, 'dMtot', nsmooth=nsmooth, dosum=True)
+		dMacc, time = self.time_smooth(iord, 'dMtot', nsmooth=nsmooth, dosum=True)
 		mdot_smooth = pynbody.array.SimArray(dMacc,'Msol')/(nsmooth*self.dTout)
-		return mdot_smooth.in_units('Msol yr**-1')
+		return mdot_smooth.in_units('Msol yr**-1'), time
 
 
 	def get_distance(self, ID1, ID2, comove=True):
