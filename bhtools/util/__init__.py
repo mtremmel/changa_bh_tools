@@ -1,4 +1,4 @@
-from . import param_reader, readcol
+from . import param_reader, readcol, cosmology
 import numpy as np
 
 def smoothdata(rawdat,nsteps=20,ret_std=False, dosum=False):

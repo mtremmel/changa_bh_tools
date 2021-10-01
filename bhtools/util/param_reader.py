@@ -22,9 +22,18 @@ class ParamFile(object):
 				s = line.split("#")[0].split()
 				self.params[s[0]] = " ".join(s[2:])
 		f.close()
+		self._get_basic_units()
+		self._get_cosmology()
 
 	def __getitem__(self, item):
 		return self.params[item]
+
+	def _get_cosmology(self):
+		self.omegaM = self.params['omegaM0']
+		self.omegaL = self.params['dLambda']
+		self.h = self.params['dHubble0']
+		hubunit = 10. * self.velunit / self.dunit
+		self.h *= hubunit
 
 	def _get_basic_units(self):
 		self.munit_st = pynbody.units.Unit(self.params["dMsolUnit"] + " Msol")

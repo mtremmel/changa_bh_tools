@@ -81,7 +81,6 @@ class BlackHoles(object):
 
 		#load in parameters from the param file - important for units!
 		self.parameters = param_reader.ParamFile(self.paramfile)
-		self.parameters._get_basic_units()
 
 		#read in data from simname.BlackHoles file
 		self._data = self._col_data(self.filename)
@@ -94,6 +93,14 @@ class BlackHoles(object):
 
 		for i in range(len(self.bhiords)):
 			self._bhind[self.bhiords[i]] = _id_slice[i]
+
+		self.dTout = self._get_output_cadence()
+
+	def _get_output_cadence(self):
+		t0 = cosmology.getTime(0,self.parameters.h, self.parameters.omegaM, self.parameters.omegaL,unit='Gyr')
+		dt_big = t0 / self.parameters.params['nSteps']
+		dt_out = dt_big / 2**self.parameters.params['iBHSinkOutRung']
+		return pynbody.unit.Units(str(dt_out)+' Gyr')
 
 	def __getitem__(self, item):
 		'''
@@ -152,6 +159,14 @@ class BlackHoles(object):
 			return data, std, time
 		else:
 			return data, time
+
+	def smoothed_accretion_history(self, iord, dt='10 Myr'):
+		tsmooth = pynbody.units.Unit(dt)
+		nsmooth = int(tsmooth.ratio(self.dTout))
+		dMacc = self.time_smooth(iord, 'dMtot', nsmooth=nsmooth, dosum=True)
+		mdot_smooth = pynbody.array.SimArray(dMacc,'Msol')/(nsmooth*self.dTout)
+		return mdot_smooth.in_units('Msol yr**-1')
+
 
 	def get_distance(self, ID1, ID2, comove=True):
 		time1 = self[(ID1,'time')]
