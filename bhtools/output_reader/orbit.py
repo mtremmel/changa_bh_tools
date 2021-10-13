@@ -154,7 +154,7 @@ class BlackHoles(object):
 			data = smoothdata(self._data[prop][self._bhind[iord]], nsteps=nsmooth, dosum=dosum)
 		time = self._data['time'][self._bhind[iord]][int(nsmooth/2)::nsmooth]
 		if len(time)>len(data):
-			time = time[::-1]
+			time = time[:-1]
 		if std:
 			return data, std, time
 		else:
