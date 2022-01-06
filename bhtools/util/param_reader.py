@@ -70,4 +70,4 @@ class ParamFile(object):
 		:return: a unit object based on the kpc units of the simulation in the param file
 		returned in units of co-moving Mpc
 		'''
-		return pynbody.units.Unit(str(self.params['dKpcUnit']/1e3)+' a Mpc')
+		return pynbody.units.Unit(self.params['dKpcUnit']+' a Kpc')
