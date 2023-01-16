@@ -289,7 +289,7 @@ def select_gas_particles(ht, bhmass, rmax):
 	if still_needed / cen_gas[osort[i]]['mass'].in_units('Msol') > 1:
 		raise RuntimeError("Error! Gas should have already been deleted!")
 	if cen_gas[osort[i]]['mass'].in_units('Msol') - still_needed < float(ht._paramfile['dMinGasMass'])*float(ht._paramfile['dMsolUnit']):
-		delete_iords.append(cen_gas[osort[i]]['iord'])
+		np.append(delete_iords,cen_gas[osort[i]]['iord'])
 	else:
 		new_mass = pynbody.array.SimArray(cen_gas[osort[i]]['mass'].in_units('Msol') - still_needed, 'Msol')
 		new_mass_iord = cen_gas[osort[i]]['iord']
