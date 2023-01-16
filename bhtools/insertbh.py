@@ -281,7 +281,7 @@ def select_gas_particles(ht, bhmass, rmax):
 
 	idelete = np.where(mgas_cumsum<=bhmass)[0]
 	delete_iords = cen_gas['iord'][osort[idelete]]
-	new_mass = -1
+	new_mass = pynbody.array.SimArray(-1,'Msol')
 	new_mass_iord = -1
 
 	still_needed = bhmass - mgas_cumsum[idelete[-1]]
