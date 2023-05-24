@@ -58,5 +58,4 @@ def getRedshift(times, h0, omegaM0, omegaL0, verbose=False):
 					except:
 						print(("ERROR did not converge", times[tt], tt))
 						redshift[tt] = -1
-				print(redshift[tt])
 		return redshift
