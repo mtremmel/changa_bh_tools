@@ -47,9 +47,6 @@ def getRedshift(times, h0, omegaM0, omegaL0, verbose=False):
 			print("WARNING assuming provided time is in units of Gyr")
 			times = pynbody.array.SimArray(times,'Gyr')
 		for tt in range(np.size(times)):
-				if tt%100==0 and verbose is True:
-					print((tt/np.float(ntimes) * 100, '% done'))
-				print(times[tt])
 				def func(z):
 						return getTime(z, h0, omegaM0, omegaL0, unit='Gyr') - times.in_units('Gyr')[tt]
 
