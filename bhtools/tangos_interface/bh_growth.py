@@ -48,14 +48,15 @@ def gal_bh_acc_hist(halo, *constraints, selection='BH_mass', minmax='max'):
 	mdot_array, tarray = trace_bh_galaxy(halo, link_string)
 	return mdot_array, tarray
 
+#useful functions below showing common examples
 def most_massive_bh_acc_hist(halo):
 	return gal_bh_acc_hist(halo, selection='BH_mass', minmax='max')
 
 def central_bh_acc_hist(halo, max_dist=1):
-	return gal_bh_acc_hist(halo, 'bh_central_distance<'+str(max_dist), selection='BH_mass', minmax='max')
+	return gal_bh_acc_hist(halo, 'BH_central_distance<'+str(max_dist), selection='BH_mass', minmax='max')
 
 def brightest_bh_acc_hist(halo):
 	return gal_bh_acc_hist(halo, selection='BH_mdot_ave', minmax='max')
 
 def brightest_central_bh_acc_hist(halo, max_dist=1):
-	return gal_bh_acc_hist(halo, 'bh_central_distance<'+str(max_dist), selection='BH_mdot_ave', minmax='max')
+	return gal_bh_acc_hist(halo, 'BH_central_distance<'+str(max_dist), selection='BH_mdot_ave', minmax='max')
