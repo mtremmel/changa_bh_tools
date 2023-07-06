@@ -63,9 +63,10 @@ def brightest_central_bh_acc_hist(halo, max_dist=1):
 
 def get_macc(bhdb, tform1, tform2):
     """
+    Get the accreted mass for a specific BH, excluding all formation accretion events
     :param bhdb: simulation object for black hole
     :param tform1/tform2: together, all of the formation times
-    for all progenitor BHs the BH's merger tree
+    for all progenitor BHs along the target BH's merger tree
     :param sim: name of simulatino in database
     :return: total accreted mass along complete merger tree for each BH
     """
@@ -95,6 +96,13 @@ def get_macc(bhdb, tform1, tform2):
     return macc
 
 def get_macc_all(step, link_string, merger_data):
+    '''
+    Get accreted mass for all BHs in a given step based on some selection criteria
+    :param step: simulation step (tangos timestep)
+    :param link_string: string to select bhs from galaxies e.g. link(BH_central, BH_mass, "mas")
+    :param merger_data: data on BH mergers
+    :return: array of all BH accreted masses from each galay given link string
+    '''
     target_bhs, = step.calculate_all(link_string)
     bh_iord_list = []
     for i in range(len(target_bhs)):
