@@ -4,6 +4,16 @@ import os
 import pynbody
 
 def get_mergers_by_id(bhiord, mdata, time, dmin, dtmin):
+	'''
+		Extract information on mergers which involve a specific BH ID number.
+		:param bhiord: target BH id number
+		:param mdata: merger data
+		:param time: maximum time to consider
+		:param dmin: minimum initial distance for "true" mergers
+		:param dtmin: minimum time since formation for "true" mergers
+		:return: IDs of "true" merger BHs, Merger times, Formation times of each BH (1 and 2),
+		initial distance between BHs, exhaustive list of IDs for ALL mergers in the simulation
+		'''
 	# return mdata['IDeat'][(mdata['ID']==bhiord)], mdata['step'][(mdata['ID']==bhiord)]
 	match = np.where((mdata['ID1'] == bhiord) & (mdata['merge_mass_1'] >= 1e6) & (mdata['merge_mass_2'] >= 1e6) & (
 				np.minimum(mdata['tform1'], mdata['tform2']) > 0)&(mdata['time']<time)&
@@ -15,6 +25,16 @@ def get_mergers_by_id(bhiord, mdata, time, dmin, dtmin):
 	       mdata['init_dist'][match], mdata['ID2'][match_all]
 
 def get_all_mergers(bhiord, mdata, time, dmin, dtmin):
+	'''
+	Extract an exhaustive list of mergers along all branches of a target BH's merger tree
+	:param bhiord: target BH id number
+	:param mdata: merger data
+	:param time: maximum time to consider
+	:param dmin: minimum initial distance for "true" mergers
+	:param dtmin: minimum time since formation for "true" mergers
+	:return: IDs of "true" merger BHs, Merger times, Formation times of each BH (1 and 2),
+	initial distance between BHs, exhaustive list of IDs for ALL mergers in the simulation
+	'''
 	bhlist = list([bhiord])
 	bhlist_new = list([])
 	id_list_all = list([])
@@ -48,8 +68,13 @@ def get_all_mergers(bhiord, mdata, time, dmin, dtmin):
 def collect_all_bh_mergers(tot_bhids, time, mdata, dmin, dtmin):
 	'''
 	:param tot_bhids: the total list of BH ids you want to collect mergers for
-	:param mdata: merger data
-	:return:
+	:param time: maximum time of mergers to consider
+	:param mdata: merger data object
+	:param dmin: the minimum initial separation of BHs to be "true" mergers
+	:param dtmin: the minimum time between formation and merger "true" mergers
+	:return: total number of "true" mergers, "true" merger times, "true" merger BH IDs,
+	All merger BH IDs, time of last "true" merger, final BH ID (same as input), formation time
+	of "True" mergers (1 and 2), and the total number of All mergers.
 	'''
 	#tot_bhids = np.append(bhid_cen, bhid_any)
 	#tot_bhids = np.unique(tot_bhids)
