@@ -28,3 +28,8 @@ def smoothdata(rawdat,nsteps=20,ret_std=False, dosum=False):
     else:
         std = rawdat.std(axis=1)
         return meandat, std
+
+def cutdict(target, goodinds):
+    for key in list(target.keys()):
+        target[key] = target[key][goodinds]
+    return
