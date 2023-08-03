@@ -33,3 +33,19 @@ def cutdict(target, goodinds):
     for key in list(target.keys()):
         target[key] = target[key][goodinds]
     return
+
+def wrap(relpos,scale,boxsize=25e3):
+    '''
+    take an array of "raw" relative positions and update their values
+    assuming a periodic box of size boxsize.
+    :param relpos: the relative positions (dx,dy,dz) in physical units
+    :param scale: the scale factor 1/(1+redshift)
+    :param boxsize: the boxsize in co-moving kpc
+    '''
+    bphys = boxsize*scale
+    bad = np.where(np.abs(relpos) > bphys/2.)
+    if isinstance(bphys, np.ndarray):
+        relpos[bad] = -1.0 * (relpos[bad] / np.abs(relpos[bad])) * np.abs(bphys[bad] - np.abs(relpos[bad]))
+    else:
+        relpos[bad] = -1.0 * (relpos[bad]/np.abs(relpos[bad])) * np.abs(bphys - np.abs(relpos[bad]))
+    return

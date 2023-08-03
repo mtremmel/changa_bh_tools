@@ -99,7 +99,7 @@ def get_macc_all(step, link_string, merger_data):
     '''
     Get accreted mass for all BHs in a given step based on some selection criteria
     :param step: simulation step (tangos timestep)
-    :param link_string: string to select bhs from galaxies e.g. link(BH_central, BH_mass, "mas")
+    :param link_string: string to select bhs from galaxies e.g. link(BH_central, BH_mass, "max")
     :param merger_data: data on BH mergers
     :return: array of all BH accreted masses from each galay given link string
     '''
