@@ -17,6 +17,15 @@ class MbhMstarRelation(object):
         return self._params[citation][4]
 
     def plot(self, citation, logmstar_min, logmstar_max, log=False, color='k', show_scatter=True, scatter_alpha=0.5, **kwargs):
+        '''
+        :param citation: name of relation (check _params.keys() for options)
+        :param logmstar_min: minimum log10(mstar) you want to plot
+        :param logmstar_max: maximum log10(mstar)
+        :param log: If you want to plot log values rather than scale axes
+        :param color: color of line and scatter
+        :param show_scatter: if true, show region denoting intrinsic scatter of relation
+        :param scatter_alpha: transparancy of scatter shaded region
+        '''
         xarray  = np.arange(logmstar_min,logmstar_max, 0.01)
         yarray = self._calc_relation(xarray, citation)
         if not log:
