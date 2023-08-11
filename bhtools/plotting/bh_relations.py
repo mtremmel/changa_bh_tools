@@ -5,8 +5,9 @@ class MbhMstarRelation(object):
     #parameters are a, b, c, and intrinsic scatter
     #general relation is logMbh = c+ a*lobMstar - b
     def __init__(self):
-        self._params = {'SS2013':(1.12, 11, 8.31, 0.3),
-                    'RV15AGN': (1.05, 11, 7.75, 0.24)}
+        self._params = {'SS2013':(1.12, 11, 8.31, 0.3), #Schramm & Silverman 2013
+                    'RV15AGN': (1.05, 11, 7.75, 0.24),  #AGN from Reines+Volonteri 2015
+                        'KH2013': (1.16,11,8.69, 0.29)} #Kormendy+Ho 2013, Mbh-Mbulge for Classical Bulges, Ellipticals
 
     def _calc_relation(self, logMstar, citation):
         p = self._params[citation]
