@@ -101,7 +101,7 @@ def get_macc_all(step, link_string, merger_data):
     :param step: simulation step (tangos timestep)
     :param link_string: string to select bhs from galaxies e.g. link(BH_central, BH_mass, "max")
     :param merger_data: data on BH mergers
-    :return: array of all BH accreted masses from each galay given link string
+    :return: bhids, array of all BH accreted masses from each galay given link string
     '''
     target_bhs, = step.calculate_all(link_string)
     bh_iord_list = []
@@ -117,4 +117,4 @@ def get_macc_all(step, link_string, merger_data):
         if i%100==0:
             print(i/len(target_bhs))
         macc_all[i] = get_macc(target_bhs[i],tform1[i], tform2[i])
-    return macc_all
+    return np.array(bh_iord_list), macc_all
