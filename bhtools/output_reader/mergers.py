@@ -109,39 +109,142 @@ def collect_all_bh_mergers(tot_bhids, time, mdata, dmin, dtmin):
 
 
 class BHMergers(object):
-	def __init__(self, simname, paramfile):
+	def __init__(self, simname, paramfile=None, use_existing_object=None):
+		'''
+		:param simname: name of simulation (based on output file names)
+		:param paramfile: name of param file (default is simname.param)
+		:param use_existing_object: initialize a new object from an old one
+		'''	
 		self.simname = simname
-		self.parameters = util.param_reader.ParamFile(self.paramfile)
 		self.db_mergers = {}
 		if paramfile is None:
 			self.paramfile = simname+'.param'
 		else:
 			self.paramfile = paramfile
+		self.parameters = util.param_reader.ParamFile(self.paramfile)
+		if use_existing_object:
+			self._initialize_from_existing(use_existing_object)
+		else:
+			self.mergerfile = simname + '.BHmergers'
+			print("reading .mergers file...")
+			ID, IDeat, Mass1, Mass2, ratio, kick, time, scale = util.readcol.readcol(self.mergerfile, twod=False)
+			print("checking for bad IDs...")
+			bad = np.where(ID < 0)[0]
+			if len(bad) > 0:
+				ID[bad] = 2 * 2147483648 + ID[bad]
+			bad2 = np.where(IDeat < 0)[0]
+			if len(bad2) > 0:
+				IDeat[bad2] = 2 * 2147483648 + IDeat[bad2]
 
-		self.mergerfile = simname + '.mergers'
-		print("reading .mergers file...")
-		time, step, ID, IDeat, ratio, kick = util.readcol.readcol(self.mergerfile, twod=False)
-		print("checking for bad IDs...")
-		bad = np.where(ID < 0)[0]
-		if len(bad) > 0:
-			ID[bad] = 2 * 2147483648 + ID[bad]
-		bad2 = np.where(IDeat < 0)[0]
-		if len(bad2) > 0:
-			IDeat[bad2] = 2 * 2147483648 + IDeat[bad2]
+			uIDeat, indices = np.unique(IDeat, return_index=True)
 
-		uIDeat, indices = np.unique(IDeat, return_index=True)
+			self.rawdat = {'time': time, 'ID1': ID, 'ID2': IDeat, 'ratio': ratio, 'kick': kick, 'scale': scale,
+			               'redshift': scale**-1 -1, 'merge_mass_1': Mass1, 'merge_mass_2':Mass2}
+			util.cutdict(self.rawdat, indices)
+			ordr = np.argsort(self.rawdat['ID2'])
+			util.cutdict(self.rawdat, ordr)
 
-		self.rawdat = {'time': time, 'ID1': ID, 'ID2': IDeat, 'ratio': ratio, 'kick': kick, 'step': step}
-		util.cutdict(self.rawdat, indices)
-		ordr = np.argsort(self.rawdat['ID2'])
-		util.cutdict(self.rawdat, ordr)
+			uIDeat, cnt = np.unique(self.rawdat['ID2'], return_counts=True)
+			if len(np.where(cnt > 1)[0]) > 0:
+				raise RuntimeWarning("Same Black Hole Marked as Eaten TWICE!")
 
-		z = util.cosmology.getRedshift(pynbody.array.SimArray(self.rawdat['Time'],'Gyr'),
+	def __getitem__(self,item):
+		return self.rawdat[item]
+
+	def keys(self):
+		return self.rawdat.keys()
+
+	def _initialize_from_existing(self,merger_file):
+		print("creating raw data from existing merger file")
+		print("exiting keys: ", merger_file.keys())
+		self.rawdat = {}
+		for key in merger_file.keys():
+			self.rawdat[key] = merger_file[key]
+
+	def _get_redshifts(self):
+		z = util.cosmology.getRedshift(pynbody.array.SimArray(self.rawdat['time'], 'Gyr'),
 		                               self.parameters.h, self.parameters.omegaM, self.parameters.omegaL)
-
 		self.rawdat['redshift'] = z
 
-		uIDeat, cnt = np.unique(self.rawdat['ID2'], return_counts=True)
-		if len(np.where(cnt > 1)[0]) > 0:
-			raise RuntimeWarning("Same Black Hole Marked as Eaten TWICE!")
+	def get_final_mdot(self, bhorbit):
+		self.rawdat['mdot_final_1'] = np.ones(len(self.rawdat['ID1']))*-1
+		self.rawdat['mdot_final_2'] = np.ones(len(self.rawdat['ID2'])) * -1
+		for i in range(len(self.rawdat['ID2'])):
+			tmerger = self.rawdat['time'][i]
+			tlast_orbit = bhorbit[self.rawdat['ID2'][i],'time'].max()
+			if tlast_orbit-tmerger > 0.005:
+				print("Black Hole", self.rawdat['ID2'][i],
+				            "has a mismatch between merger data and orbit data times")
+				continue
+			self.rawdat['merge_mdot_2'][i] = \
+				bhorbit[self.rawdat['ID2'][i],'mdot'][-1]
+			time_bh_1 = bhorbit[self.rawdat['ID1'][i],'time']
+			self.rawdat['merge_mdot_1'][i] = \
+				bhorbit[self.rawdat['ID1'][i], 'mdot'][np.argmin(np.abs(time_bh_1-tmerger))]
+
+	def get_dual_frac(self, bhorbit,minL=1e43,maxD=10,comove=True, gather_array=False, timestep=None, er=0.1):
+
+		tstr = 't_D' + str(maxD)
+		fstr = 'frdual_L' + str(minL) + '_D' + str(maxD)
+		if comove:
+			tstr = tstr + 'c'
+			fstr = fstr + 'c'
+
+		self.rawdat[fstr] = np.ones(len(self.rawdat['ID1'])) * -1
+		self.rawdat[tstr] = np.ones(len(self.rawdat['ID1'])) * -1
+
+		for i in range(len(self.rawdat['ID1'])):
+			if self.rawdat['ID2'][i] not in  bhorbit['iord'] or self.rawdat['ID1'][i] not in bhorbit['iord']:
+				continue
+
+			time1 = bhorbit[self.rawdat['ID1'][i], 'time']
+			mdot1 = bhorbit[self.rawdat['ID1'][i], 'mdot'].in_units('g s**-2')
+			time2 = bhorbit[self.rawdat['ID2'][i], 'time']
+			mdot2 = bhorbit[self.rawdat['ID2'][i], 'mdot'].in_units('g s**-2')
+
+			if time2.max()-self.rawdat['time'][i]>0.005:
+				print("BHs have a mismatch in orbit data! Fake merger?",
+				      self.rawdat['ID1'][i], self.rawdat['ID2'][i])
+				continue
+			if time2.max()<time1.min():
+				print("BH merger and formation of one or both coincide",
+				      self.rawdat['ID1'][i], self.rawdat['ID2'][i])
+				continue
+			try:
+				distance, time, scale = bhorbit.get_distance(self.rawdat['ID1'][i], self.rawdat['ID2'][i], comove=comove)
+			except:
+				print("Failed to calculate distances... ignoring", self.rawdat['ID1'][i], self.rawdat['ID2'][i])
+				continue
+			if len(time)<2:
+				print("weird! zero times!", distance, self.rawdat['ID1'][i], self.rawdat['ID2'][i])
+				continue
+			close = np.where(distance < maxD)[0]
+
+			use1 = np.where(np.in1d(time1, time2))[0]
+			use2 = np.where(np.in1d(time2, time1))[0]
+			use3 = np.where(np.in1d(time,time1[use1]))[0]
+			if len(use3)!=len(time) or len(np.where(time[use3]!=time1[use1])[0])!=0:
+				print("Warning! Issue with mapping for luminosities! Skipping...",
+				      self.rawdat['ID1'][i], self.rawdat['ID2'][i])
+				continue
+			lum1 = util.phys_const['c']**2 * mdot1[use1] * er
+			lum2 = util.phys_const['c'] ** 2 * mdot2[use2] * er
+
+			close_and_bright = np.where((distance<maxD)&(lum1>minL)&(lum2>minL))[0]
+
+			if timestep is None: #estimate timesteps between outputs
+				dt = time[1:]-time[:-1]
+				dt = np.append(dt[0],dt)
+				time_close = np.sum(dt[close])
+				time_bright = np.sum(dt[close_and_bright])
+			else: #use provided constant output timestep
+				time_close = timestep*len(close)
+				time_bright = timestep*len(close_and_bright)
+			self.rawdat[tstr][i] = time_close
+			self.rawdat[fstr][i] = time_bright/time_close
+
+
+
+
+
 

@@ -6,12 +6,147 @@ from ..util import *
 
 from bhtools.util import readcol
 
+class BHOrbitData(object):
+	def __init__(self, paramfile):
+		self.paramfile = paramfile
 
-class BlackHoles(object):
+		#load in parameters from the param file - important for units!
+		self.parameters = param_reader.ParamFile(self.paramfile)
 
-	def _col_data(self, filename):
+		#read in data from simname.BlackHoles file
+		self._data = self._col_data()
+		#convert to physical units
+
+		self.bhiords, _id_slice = self._get_iord_slice_ind()
+
+		self._bhind = {}
+
+		for i in range(len(self.bhiords)):
+			self._bhind[self.bhiords[i]] = _id_slice[i]
+
+	def _col_data(self):
+		return
+
+	def __getitem__(self, item):
+		'''
+		user can get data under "key" for an individual BH with orbit_object[(iord,"key")]
+		'''
+
+		if type(item)!=str and type(item)!=tuple:
+			raise ValueError("invalid arguments to __getitem__, use orbit_object[(iord,'key')]")
+
+		if type(item)==str:
+			if item in self._data.keys():
+				return self._data[item]
+			else:
+				raise ValueError(item, "not found in BH data")
+
+		if type(item)==tuple:
+			select_id = item[0]
+			select_data = item[1]
+
+			if (type(select_id)!=np.int64 and type(select_id)!=int) or type(select_data)!=str:
+				raise ValueError("invalid arguments to __getitem__, use orbit_object[(iord,'key')]")
+			if select_data not in self._data.keys():
+				raise ValueError(select_data, " not found in BH data")
+			else:
+				return self._data[select_data][self._bhind[select_id]]
+
+	def _get_iord_slice_ind(self):
+		'''
+		return unigue iord values and the indices of the time-ordered data slices for each iord
+		'''
+		ord_ = np.argsort(self._data['iord'])
+		uvalues, ind = np.unique(self._data['iord'][ord_], return_index=True)
+		slice_ = []
+		for i in range(len(uvalues) - 1):
+			ss = ord_[ind[i]:ind[i + 1]]
+			sort_ = np.argsort(self._data['time'][ss])
+			ss = ss[sort_]
+			#check for multiples in time and keep only the last one in the file
+			utime, utind, cnt = np.unique(self._data['time'][ss], return_counts=True, return_index=True)
+			double_ind = np.where(cnt>1)[0]
+			to_cut = []
+			for ii in double_ind:
+				to_cut.extend(utind[ii:ii+cnt[ii]-1])
+			ss = np.delete(ss,to_cut)
+			slice_.append(ss)
+		#do last chunk
+		ss = ord_[ind[i + 1]:]
+		sort_ = np.argsort(self._data['time'][ss])
+		ss = ss[sort_]
+		utime, utind, cnt = np.unique(self._data['time'][ss], return_counts=True, return_index=True)
+		double_ind = np.where(cnt > 1)[0]
+		to_cut = []
+		for ii in double_ind:
+			to_cut.extend(utind[ii:ii + cnt[ii] - 1])
+		ss = np.delete(ss, to_cut)
+		slice_.append(ss)
+		return uvalues, slice_
+
+	def time_smooth(self, iord, prop, nsmooth=10,ret_std=False, dosum=False):
+		std = None
+		if ret_std is True:
+			data, std = smoothdata(self._data[prop][self._bhind[iord]], nsteps=nsmooth, ret_std=True, dosum=dosum)
+		else:
+			data = smoothdata(self._data[prop][self._bhind[iord]], nsteps=nsmooth, dosum=dosum)
+		time = self._data['time'][self._bhind[iord]][int(nsmooth/2)::nsmooth]
+		if len(time)>len(data):
+			time = time[:-1]
+		if std:
+			return data, std, time
+		else:
+			return data, time
+
+	def get_distance(self, ID1, ID2, comove=True):
+		time1 = self[(ID1,'time')]
+		time2 = self[(ID2,'time')]
+		x1 = self[(ID1, 'x')]
+		x2 = self[(ID2, 'x')]
+		y1 = self[(ID1, 'y')]
+		y2 = self[(ID2, 'y')]
+		z1 = self[(ID1, 'z')]
+		z2 = self[(ID2, 'z')]
+		scale = self[(ID1, 'a')]
+
+		use1 = np.where(np.in1d(time1,time2))[0]
+		use2 = np.where(np.in1d(time2,time1))[0]
+
+		if len(use1)!= len(use2)==0 or len(use1)==0 or len(use2)==0 or \
+						len(np.where(time1[use1]!=time2[use2])[0])!=0:
+			raise RuntimeError("bad time matching between BHs", ID1, ID2)
+
+		xd = x1[use1]-x2[use2]
+		yd = y1[use1]-y2[use2]
+		zd = z1[use1]-z2[use2]
+
+		#get the boxsize in physical units at each time in order to wrap distances
+		boxsize_comove = self.parameters.get_boxsize()
+		bphys = np.array([boxsize_comove.in_units('kpc', a=scale[ii]) for ii in use1])
+		badx = np.where(np.abs(xd) > bphys/2)[0]
+
+		xd[badx] = -1.0 * (xd[badx]/np.abs(xd[badx])) * \
+							  np.abs(bphys[badx] - np.abs(xd[badx]))
+
+		bady = np.where(np.abs(yd) > bphys/2)[0]
+		yd[bady] = -1.0 * (yd[bady]/np.abs(yd[bady])) * \
+							  np.abs(bphys[bady] - np.abs(yd[bady]))
+		badz = np.where(np.abs(zd) > bphys/2)[0]
+		zd[badz] = -1.0 * (zd[badz]/np.abs(zd[badz])) * \
+							  np.abs(bphys[badz] - np.abs(zd[badz]))
+
+		dist = np.sqrt(xd**2 + yd**2 + zd**2)
+
+		if comove:
+			dist /= scale[use1]
+		return dist, time1[use1], scale[use1]**-1 -1
+
+
+class BlackHoles(BHOrbitData):
+
+	def _col_data(self):
 		iord, time, step, mass, x, y, z, vx, vy, vz, pot, Mdot, dM, dE, dt, dMaccum, dEaccum, a \
-			= readcol.readcol(filename, twod=False, nanval=0.0)
+			= readcol.readcol(self.filename, twod=False, nanval=0.0)
 
 		tsort = np.argsort(time)
 		data_dict = {
@@ -65,100 +200,28 @@ class BlackHoles(object):
 		self._data['time'] = self._data['time'].in_units('Gyr')
 
 	def __init__(self, simname, filename=None, paramfile=None):
-		self.simname = simname
+		if paramfile is None:
+			self.paramfile = simname+'.param'
+		else:
+			self.paramfile = paramfile
 		if filename is None:
 			self.filename = simname+'.BlackHoles'
 		else:
 			self.filename = filename
 
-		if paramfile is None:
-			self.paramfile = simname+'.param'
-		else:
-			self.paramfile = paramfile
-
 		if not os.path.exists(self.filename):
 			raise RuntimeError("file", self.filename, "not found! Exiting...")
 
-		#load in parameters from the param file - important for units!
-		self.parameters = param_reader.ParamFile(self.paramfile)
-
-		#read in data from simname.BlackHoles file
-		self._data = self._col_data(self.filename)
-		#convert to physical units
-		self._phys_conv()
-
-		self.bhiords, _id_slice = self._get_iord_slice_ind()
-
-		self._bhind = {}
-
-		for i in range(len(self.bhiords)):
-			self._bhind[self.bhiords[i]] = _id_slice[i]
+		super().__init__(paramfile)
 
 		self.dTout = self._get_output_cadence()
+		self._phys_conv()
 
 	def _get_output_cadence(self):
 		t0 = cosmology.getTime(0,self.parameters.h, self.parameters.omegaM, self.parameters.omegaL,unit='Gyr')
 		dt_big = t0 / int(self.parameters.params['nSteps'])
 		dt_out = dt_big / 2**int(self.parameters.params['iBHSinkOutRung'])
 		return pynbody.units.Unit(str(dt_out)+' Gyr')
-
-	def __getitem__(self, item):
-		'''
-		user can get data under "key" for an individual BH with orbit_object[(iord,"key")]
-		'''
-
-		if type(item)!=str and type(item)!=tuple:
-			raise ValueError("invalid arguments to __getitem__, use orbit_object[(iord,'key')]")
-
-		if type(item)==str:
-			if item in self._data.keys():
-				return self._data[item]
-			else:
-				raise ValueError(item, "not found in BH data")
-
-		if type(item)==tuple:
-			select_id = item[0]
-			select_data = item[1]
-
-			if (type(select_id)!=np.int64 and type(select_id)!=int) or type(select_data)!=str:
-				raise ValueError("invalid arguments to __getitem__, use orbit_object[(iord,'key')]")
-			if select_data not in self._data.keys():
-				raise ValueError(select_data, " not found in BH data")
-			else:
-				return self._data[select_data][self._bhind[select_id]]
-
-	def _get_iord_slice_ind(self):
-		'''
-		return unigue values of data[key] and the indices of the slices for those unique values
-		'''
-		ord_ = np.argsort(self._data['iord'])
-		uvalues, ind = np.unique(self._data['iord'][ord_], return_index=True)
-		slice_ = []
-		for i in range(len(uvalues) - 1):
-			ss = ord_[ind[i]:ind[i + 1]]
-			sort_ = np.argsort(self._data['time'][ss])
-			ss = ss[sort_]
-			slice_.append(ss)
-		#do last chunk
-		ss = ord_[ind[i + 1]:]
-		sort_ = np.argsort(self._data['time'][ss])
-		ss = ss[sort_]
-		slice_.append(ss)
-		return uvalues, slice_
-
-	def time_smooth(self, iord, prop, nsmooth=10,ret_std=False, dosum=False):
-		std = None
-		if ret_std is True:
-			data, std = smoothdata(self._data[prop][self._bhind[iord]], nsteps=nsmooth, ret_std=True, dosum=dosum)
-		else:
-			data = smoothdata(self._data[prop][self._bhind[iord]], nsteps=nsmooth, dosum=dosum)
-		time = self._data['time'][self._bhind[iord]][int(nsmooth/2)::nsmooth]
-		if len(time)>len(data):
-			time = time[:-1]
-		if std:
-			return data, std, time
-		else:
-			return data, time
 
 	def smoothed_accretion_history(self, iord, dt='10 Myr'):
 		tsmooth = pynbody.units.Unit(dt)
@@ -173,46 +236,27 @@ class BlackHoles(object):
 		lum_smooth = mdot_smooth.in_units('g s**-1') * csq.in_units('erg g**-1') * er
 		return lum_smooth, time
 
+class ConvertOldOrbit(BHOrbitData):
+	def __init__(self, old_pickle_file, paramfile):
+		self.paramfile = paramfile
+		self.old_pickle_file = old_pickle_file
+		super().__init__(paramfile)
 
-	def get_distance(self, ID1, ID2, comove=True):
-		time1 = self[(ID1,'time')]
-		time2 = self[(ID2,'time')]
-		x1 = self[(ID1, 'x')]
-		x2 = self[(ID2, 'x')]
-		y1 = self[(ID1, 'y')]
-		y2 = self[(ID2, 'y')]
-		z1 = self[(ID1, 'z')]
-		z2 = self[(ID2, 'z')]
-		scale = self[(ID1, 'a')]
+	def _col_data(self):
+		import pickle
+		data_dict = {}
+		f = open(self.old_pickle_file, 'rb')
+		try:
+			old_orbit = pickle.load(f)
+		except:
+			f.close()
+			f = open(self.old_pickle_file,'rb')
+			old_orbit = pickle.load(f,encoding='latin1')
+		f.close()
+		print("Successfully read in old pickle file", self.old_pickle_file)
+		print("Gathering data", old_orbit.data.keys())
+		for key in old_orbit.data.keys():
+			data_dict[key] = old_orbit.data[key]
+		return data_dict
 
-		use1 = np.where(np.in1d(time1,time2))[0]
-		use2 = np.where(np.in1d(time2,time1))[0]
 
-		if len(use1)!= len(use2)==0 or len(use1)==0 or len(use2)==0 or \
-						len(np.where(time1[use1]!=time2[use2])[0])!=0:
-			raise RuntimeError("bad time matching between BHs", ID1, ID2)
-
-		xd = x1[use1]-x2[use2]
-		yd = y1[use1]-y2[use2]
-		zd = z1[use1]-z2[use2]
-
-		#get the boxsize in physical units at each time in order to wrap distances
-		boxsize_comove = self.parameters.get_boxsize()
-		bphys = np.array([boxsize_comove.in_units('kpc', a=scale[ii]) for ii in use1])
-		badx = np.where(np.abs(xd) > bphys/2)[0]
-
-		xd[badx] = -1.0 * (xd[badx]/np.abs(xd[badx])) * \
-							  np.abs(bphys[badx] - np.abs(xd[badx]))
-
-		bady = np.where(np.abs(yd) > bphys/2)[0]
-		yd[bady] = -1.0 * (yd[bady]/np.abs(yd[bady])) * \
-							  np.abs(bphys[bady] - np.abs(yd[bady]))
-		badz = np.where(np.abs(zd) > bphys/2)[0]
-		zd[badz] = -1.0 * (zd[badz]/np.abs(zd[badz])) * \
-							  np.abs(bphys[badz] - np.abs(zd[badz]))
-
-		dist = np.sqrt(xd**2 + yd**2 + zd**2)
-
-		if comove:
-			dist /= scale[use1]
-		return dist, time1[use1], scale[use1]**-1 -1
