@@ -97,6 +97,9 @@ class BHOrbitData(object):
 			return data, std, time
 		else:
 			return data, time
+		
+	def get_all_distance(self, ID, time, comove=False, use_closest_time=True):
+		
 
 	def get_distance(self, ID1, ID2, comove=True):
 		time1 = self[(ID1,'time')]

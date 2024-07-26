@@ -176,10 +176,10 @@ class BHMergers(object):
 				print("Black Hole", self.rawdat['ID2'][i],
 				            "has a mismatch between merger data and orbit data times")
 				continue
-			self.rawdat['merge_mdot_2'][i] = \
+			self.rawdat['mdot_final_1'][i] = \
 				bhorbit[self.rawdat['ID2'][i],'mdot'][-1]
 			time_bh_1 = bhorbit[self.rawdat['ID1'][i],'time']
-			self.rawdat['merge_mdot_1'][i] = \
+			self.rawdat['mdot_final_1'][i] = \
 				bhorbit[self.rawdat['ID1'][i], 'mdot'][np.argmin(np.abs(time_bh_1-tmerger))]
 
 	def get_dual_frac(self, bhorbit,minL=1e43,maxD=10,comove=True, gather_array=False, timestep=None, er=0.1):

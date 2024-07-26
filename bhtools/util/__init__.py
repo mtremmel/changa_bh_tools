@@ -49,3 +49,16 @@ def wrap(relpos,scale,boxsize=25e3):
     else:
         relpos[bad] = -1.0 * (relpos[bad]/np.abs(relpos[bad])) * np.abs(bphys - np.abs(relpos[bad]))
     return
+
+def write_dict_to_file(filename, my_dict, *keys_to_output_in_order, fmt=None):
+    '''
+    print out a dictionary of items to a file by providing the order of the keys
+    :param filename: name of file to write to
+    :param my_dict: dictionary object you want to write to a file
+    :param keys_to_output_in_order: keys you want to output to file (in column order)
+    :param fmt: format you want (e.g. fmt = %f, fmt = ['%d', '%f'])
+    '''
+    tofile = []
+    for key in keys_to_output_in_order:
+        tofile.append(my_dict[key])
+    np.savetxt(filename, np.column_stack(tofile), fmt=fmt)
