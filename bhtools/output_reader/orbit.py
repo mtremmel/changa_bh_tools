@@ -143,6 +143,22 @@ class BHOrbitData(object):
 		if comove:
 			dist /= scale[use1]
 		return dist, time1[use1], scale[use1]**-1 -1
+	
+	def get_tform(self,sl):
+		if sl is not None:
+			sliords = sl['iord'].astype(np.int64)
+			sliords[(sliords<0)] = 2*2147483648 + sliords[(sliords<0)]
+			ord = np.argsort(sliords)
+			bhind, = np.where(np.in1d(sliords[ord], self.bhiords))
+			self.tform = sl['tform'][ord][bhind] * -1
+			if self.tform.min() < 0: print("WARNING! Positive tforms were found for BHs!")
+			gc.collect()
+		else:
+			cnt = 0
+			self.tform = np.ones(len(self.bhiords)) * -1
+			for id in self.bhiords:
+				self.tform[cnt] = self.single_BH_data(id, 'time').min()
+				cnt += 1
 
 
 class BlackHoles(BHOrbitData):
