@@ -165,6 +165,27 @@ class BHMergers(object):
 		z = util.cosmology.getRedshift(pynbody.array.SimArray(self.rawdat['time'], 'Gyr'),
 		                               self.parameters.h, self.parameters.omegaM, self.parameters.omegaL)
 		self.rawdat['redshift'] = z
+	
+	def get_tform(self,bhorbit):
+		self.rawdat['tform1'] = np.ones(len(self.rawdat['ID1']))*-1
+		self.rawdat['tform2'] = np.ones(len(self.rawdat['ID2']))*-1
+
+		for i in range(len(self.rawdat['ID2'])):
+			time1 = bhorbit[self.rawdat['ID1'][i], 'time']
+			time2 = bhorbit[self.rawdat['ID2'][i], 'time']
+			if len(time1)>0:
+				self.rawdat['tform1'][i] = bhorbit.tform[(bhorbit.bhiords==self.rawdat['ID1'][i])][0]
+			if len(time2)>0:
+				self.rawdat['tform2'][i] = bhorbit.tform[(bhorbit.bhiords==self.rawdat['ID2'][i])][0]
+
+	def get_initial_distance(self,bhorbit):
+		self.rawdat['init_dist'] = np.ones(len(self.rawdat['ID1']))*-1
+		for i in range(len(self.rawdat['ID1'])):
+			try:
+				d12, t12, z12 = bhorbit.get_distance(self.rawdat['ID1'][i], self.rawdat['ID2'][i], comove=False)
+				self.rawdat['init_dist'][i] = d12[np.argmin(t12)]
+			except:
+				continue
 
 	def get_final_mdot(self, bhorbit):
 		self.rawdat['mdot_final_1'] = np.ones(len(self.rawdat['ID1']))*-1
@@ -176,11 +197,9 @@ class BHMergers(object):
 				print("Black Hole", self.rawdat['ID2'][i],
 				            "has a mismatch between merger data and orbit data times")
 				continue
-			self.rawdat['mdot_final_1'][i] = \
-				bhorbit[self.rawdat['ID2'][i],'mdot'][-1]
+			self.rawdat['mdot_final_1'][i] = bhorbit[self.rawdat['ID2'][i],'mdot'][-1]
 			time_bh_1 = bhorbit[self.rawdat['ID1'][i],'time']
-			self.rawdat['mdot_final_1'][i] = \
-				bhorbit[self.rawdat['ID1'][i], 'mdot'][np.argmin(np.abs(time_bh_1-tmerger))]
+			self.rawdat['mdot_final_2'][i] = bhorbit[self.rawdat['ID1'][i], 'mdot'][np.argmin(np.abs(time_bh_1-tmerger))]
 
 	def get_dual_frac(self, bhorbit,minL=1e43,maxD=10,comove=True, gather_array=False, timestep=None, er=0.1):
 
