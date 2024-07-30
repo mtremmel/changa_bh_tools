@@ -22,9 +22,9 @@ def combine_mdot(raw_mdot_list, time, dt):
 
     return tarray, mdot_array
 
-def trace_bh_galaxy(halo, bh_link_string):
+def trace_bh_galaxy(halo, bh_link_string, property_name='BH_mdot_histogram_ave'):
     """collect and combine raw BH histograms for selected BHs along merger tree"""
-    mdot_hist_list, time_list = halo.calculate_for_progenitors(bh_link_string + '.raw(BH_mdot_histogram)', 't()')
+    mdot_hist_list, time_list = halo.calculate_for_progenitors(bh_link_string + '.raw('+property_name+')', 't()')
     dt = halo.timestep.simulation.get('histogram_delta_t_Gyr', _default_dt)
     tarray, mdot_array = combine_mdot(mdot_hist_list, time_list, dt)
     return mdot_array, tarray
@@ -71,7 +71,7 @@ def get_macc(bhdb, tform1, tform2):
     :return: total accreted mass along complete merger tree for each BH
     """
     macc = -1
-    mdot_all = bhdb.calculate('reassemble(BH_mdot_histogram,"sum")')
+    mdot_all = bhdb.calculate('reassemble(BH_mdot_histogram_ave,"sum")')
     tbad = np.concatenate([tform1, tform2])
     tbad = np.unique(tbad)
     obad = []
