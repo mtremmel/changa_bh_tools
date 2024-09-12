@@ -4,7 +4,7 @@ _default_dt = 0.02
 
 def init_mdot(tend, dt):
     """initialize a time array and an mdot array given a final time tend and time resolution dt"""
-    tarray = np.arange(0,tend+dt, dt)
+    tarray = np.arange(0,np.int64(tend/dt)-0.5*dt, dt)
     return tarray, np.zeros(len(tarray))
 
 def combine_mdot(raw_mdot_list, time, dt):
@@ -15,10 +15,11 @@ def combine_mdot(raw_mdot_list, time, dt):
     if len(raw_mdot_list) != len(time):
         raise RuntimeError("Time and Mdot data not the same length!")
     for i in range(len(raw_mdot_list)):
-        tmin = time[i] - len(raw_mdot_list[i])*dt
-        tmax = time[i]
-        ind = np.where((tarray>=tmin) & (tarray <=tmax))[0]
-        mdot_array[ind] = raw_mdot_list[i]
+        end = np.int64(time[i]/dt)
+        #tmin = time[i] - len(raw_mdot_list[i])*dt
+        #tmax = time[i]
+        #ind = np.where((tarray>=tmin) & (tarray <=tmax))[0]
+        mdot_array[start:end] = raw_mdot_list[i]
 
     return tarray, mdot_array
 
