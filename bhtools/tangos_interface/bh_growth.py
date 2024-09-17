@@ -16,6 +16,7 @@ def combine_mdot(raw_mdot_list, time, dt):
         raise RuntimeError("Time and Mdot data not the same length!")
     for i in range(len(raw_mdot_list)):
         end = np.int64(time[i]/dt)
+        start = end-len(raw_mdot_list[i])
         #tmin = time[i] - len(raw_mdot_list[i])*dt
         #tmax = time[i]
         #ind = np.where((tarray>=tmin) & (tarray <=tmax))[0]
