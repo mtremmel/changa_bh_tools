@@ -4,7 +4,7 @@ _default_dt = 0.02
 
 def init_mdot(tend, dt):
     """initialize a time array and an mdot array given a final time tend and time resolution dt"""
-    tarray = np.arange(0,np.int64(tend/dt)-0.5*dt, dt)
+    tarray = np.arange(0,(np.int64(tend/dt)-0.5)*dt, dt)
     return tarray, np.zeros(len(tarray))
 
 def combine_mdot(raw_mdot_list, time, dt):
