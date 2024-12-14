@@ -18,7 +18,7 @@ class ParamFile(object):
 		self.params = {}
 
 		for line in f:
-			if line[0] != "#" and len(line)>0:
+			if line[0] != "#" and line.strip():
 				s = line.split("#")[0].split()
 				self.params[s[0]] = " ".join(s[2:])
 		f.close()
