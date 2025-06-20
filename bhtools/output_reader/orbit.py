@@ -231,7 +231,7 @@ class BlackHoles(BHOrbitData):
 		if not os.path.exists(self.filename):
 			raise RuntimeError("file", self.filename, "not found! Exiting...")
 
-		super().__init__(paramfile)
+		super().__init__(self.paramfile)
 
 		self.dTout = self._get_output_cadence()
 		self._phys_conv()
