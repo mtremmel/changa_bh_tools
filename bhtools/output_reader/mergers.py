@@ -137,7 +137,7 @@ class BHMergers(object):
 			if len(bad2) > 0:
 				IDeat[bad2] = 2 * 2147483648 + IDeat[bad2]
 			
-			testsnap = glob.glob('simname.000???')[0]
+			testsnap = glob.glob(simname+'.000???')[0]
 			f = pynbody.load(testsnap)
 			tunits = f.infer_original_units('Gyr')
 			munits = f.infer_original_units('Msol')
