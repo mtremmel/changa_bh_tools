@@ -3,11 +3,13 @@ import matplotlib.pyplot as plt
 
 class MbhMstarRelation(object):
     #parameters are a, b, c, and intrinsic scatter
-    #general relation is logMbh = c+ a*lobMstar - b
+    #general relation is logMbh = c+ a*(lobgMstar - b)
     def __init__(self):
         self._params = {'SS2013':(1.12, 11, 8.31, 0.3), #Schramm & Silverman 2013
                     'RV15AGN': (1.05, 11, 7.75, 0.24),  #AGN from Reines+Volonteri 2015
-                        'KH2013': (1.16,11,8.69, 0.29)} #Kormendy+Ho 2013, Mbh-Mbulge for Classical Bulges, Ellipticals
+                        'KH2013': (1.16,11,8.69, 0.29), #Kormendy+Ho 2013, Mbh-Mbulge for Classical Bulges, Ellipticals
+                        'PacucciHighz': (1.06,0,-2.43,0.69), # Pacucci derived from JWST
+                        'Li25Highz': (1.02,0,-3.32,0.97)} # Li 2025 "tip of the iceberg" paper (also dervied by JWST) 
 
     def _calc_relation(self, logMstar, citation):
         p = self._params[citation]
