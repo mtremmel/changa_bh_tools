@@ -1,6 +1,7 @@
 import numpy as np
 from .. import util
 import os
+import glob
 import pynbody
 
 def get_mergers_by_id(bhiord, mdata, time, dmin, dtmin):
@@ -136,10 +137,17 @@ class BHMergers(object):
 			if len(bad2) > 0:
 				IDeat[bad2] = 2 * 2147483648 + IDeat[bad2]
 
+            testsnap = glob.glob('simname.000???')[0]
+            f = pynbody.load(testsnap)
+            tunits = f.infer_original_units('Gyr')
+            munits = f.infer_original_units('Msol')
+            gyr_ratio = pynbody.units.Gyr.ratio(tunits)
+            msol_ratio = pynbody.units.Msol.ratio(munits)
+
 			uIDeat, indices = np.unique(IDeat, return_index=True)
 
-			self.rawdat = {'time': time, 'ID1': ID, 'ID2': IDeat, 'ratio': ratio, 'kick': kick, 'scale': scale,
-			               'redshift': scale**-1 -1, 'merge_mass_1': Mass1, 'merge_mass_2':Mass2}
+			self.rawdat = {'time': time/gyr_ratio, 'ID1': ID, 'ID2': IDeat, 'ratio': ratio, 'kick': kick, 'scale': scale,
+			               'redshift': scale**-1 -1, 'merge_mass_1': Mass1/msol_ratio, 'merge_mass_2':Mass2/msol_ratio}
 			util.cutdict(self.rawdat, indices)
 			ordr = np.argsort(self.rawdat['ID2'])
 			util.cutdict(self.rawdat, ordr)
