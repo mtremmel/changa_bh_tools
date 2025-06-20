@@ -136,13 +136,12 @@ class BHMergers(object):
 			bad2 = np.where(IDeat < 0)[0]
 			if len(bad2) > 0:
 				IDeat[bad2] = 2 * 2147483648 + IDeat[bad2]
-
-            testsnap = glob.glob('simname.000???')[0]
-            f = pynbody.load(testsnap)
-            tunits = f.infer_original_units('Gyr')
-            munits = f.infer_original_units('Msol')
-            gyr_ratio = pynbody.units.Gyr.ratio(tunits)
-            msol_ratio = pynbody.units.Msol.ratio(munits)
+			
+			testsnap = glob.glob('simname.000???')[0]f = pynbody.load(testsnap)
+			tunits = f.infer_original_units('Gyr')
+			munits = f.infer_original_units('Msol')
+			gyr_ratio = pynbody.units.Gyr.ratio(tunits)
+			msol_ratio = pynbody.units.Msol.ratio(munits)
 
 			uIDeat, indices = np.unique(IDeat, return_index=True)
 
