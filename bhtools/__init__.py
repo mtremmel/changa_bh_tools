@@ -98,15 +98,13 @@ class BHCatalog(object):
         return mdot_smooth.in_units('Msol yr**-1'), time
 
     def smoothed_luminosity_history(self, iord, dt='10 Myr', er=0.1, fedd=False, track='major'):
-        mdot_smooth, time = self.smoothed_accretion_history(iord,dt,track)
-        csq = phys_const['c'].in_units('cm s**-1')**2
-        lum_smooth = mdot_smooth.in_units('g s**-1') * csq.in_units('erg g**-1') * er
-        if fedd:
+        if fedd is False:
+            mdot_smooth, time = self.smoothed_accretion_history(iord,dt,track)
+            csq = phys_const['c'].in_units('cm s**-1')**2
+            lum_smooth = mdot_smooth.in_units('g s**-1') * csq.in_units('erg g**-1') * er
+        if fedd is True:
             tsmooth = pynbody.units.Unit(dt)
             nsmooth = int(tsmooth.ratio(self.orbitdata.dTout))
-            mass_smooth = smoothdata(self[iord,'mass',track],nsteps=nsmooth,dosum=False)
-            if len(mass_smooth) != len(lum_smooth):
-                raise RuntimeError("Smoothed mass array is not the same length as smoothed luminosity array! Cannot compute eddington ratio!")
-            lum_smooth /= ledd(mass_smooth)
+            lum_smooth = smoothdata(self[iord,'lum_er_'+str(er)]/ledd(self[iord,'mass',track]),nsteps=nsmooth,dosum=False)
         return lum_smooth, time
 
