@@ -83,6 +83,27 @@ class BHOrbitData(object):
 		ss = np.delete(ss, to_cut)
 		slice_.append(ss)
 		return uvalues, slice_
+	
+	def _concatenate_iord_slices(self, bhiord, nodes_iord, nodes_time):
+		#stithces together BHs at different times
+		#meant to work with major progenitors
+		if len(nodes_time)!=len(nodes_iord):
+			raise RuntimeError("size of time and iord nodes must be the same")
+		if len(nodes_time)==0: #no changes to main progenitor, so just give the original
+			return self._bhind[bhiord]
+		tmax = self._data['time'][self._bhind[bhiord]].max()
+		tmin = nodes_time[0]
+		slice_new = self._bhind[bhiord][(self._data['time'][self._bhind[bhiord]]>tmin)]
+		for i in range(len(nodes_iord)):
+			tmax = nodes_time[i]
+			if len(nodes_time)>i+1:
+				tmin = nodes_time[i+1]
+			else:
+				tmin = 0
+			timearr = self._data['time'][self._bhind[nodes_iord[i]]]
+			slice_new = np.append(self._bhind[nodes_iord[i]][(timearr>tmin)&(timearr<=tmax)], slice_new)
+		return slice_new
+
 
 	def time_smooth(self, iord, prop, nsmooth=10,ret_std=False, dosum=False):
 		std = None
@@ -160,7 +181,6 @@ class BHOrbitData(object):
 				self.tform[cnt] = self.single_BH_data(id, 'time').min()
 				cnt += 1
 
-
 class BlackHoles(BHOrbitData):
 
 	def _col_data(self):
@@ -235,6 +255,10 @@ class BlackHoles(BHOrbitData):
 
 		self.dTout = self._get_output_cadence()
 		self._phys_conv()
+
+	def calc_lum(self, er=0.1):
+		self._data['lum_er_'+str(er)] = self._data['mdot'].in_units('g s**-1')*phys_const['c'].in_units('cm s**-1')**2 *er
+		
 
 	def _get_output_cadence(self):
 		t0 = cosmology.getTime(0,self.parameters.h, self.parameters.omegaM, self.parameters.omegaL,unit='Gyr')

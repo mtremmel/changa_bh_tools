@@ -24,6 +24,10 @@ class ParamFile(object):
 		f.close()
 		self._get_basic_units()
 		self._get_cosmology()
+		if 'dInitBHMass' in self.params.keys():
+			self.init_mbh = float(self.params['dInitBHMass'])*self.munit
+		else:
+			self.init_mbh = -1
 
 	def __getitem__(self, item):
 		return self.params[item]

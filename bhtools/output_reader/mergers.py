@@ -4,7 +4,7 @@ import os
 import glob
 import pynbody
 
-def get_mergers_by_id(bhiord, mdata, time, dmin, dtmin):
+def get_mergers_by_id(bhiord, mdata, time, dtmin=None, dmin=None, mmin=None):
 	'''
 		Extract information on mergers which involve a specific BH ID number.
 		:param bhiord: target BH id number
@@ -12,20 +12,24 @@ def get_mergers_by_id(bhiord, mdata, time, dmin, dtmin):
 		:param time: maximum time to consider
 		:param dmin: minimum initial distance for "true" mergers
 		:param dtmin: minimum time since formation for "true" mergers
-		:return: IDs of "true" merger BHs, Merger times, Formation times of each BH (1 and 2),
-		initial distance between BHs, exhaustive list of IDs for ALL mergers in the simulation
+		:param mmin: minimum BH masses to consider. None will default to the initial mass given in param file (or -1 if it doesn't exist)
+		:return: IDs of "true" merger BHs, Merger times, Mass 1, Mass 2, exhaustive list of IDs for ALL mergers in the simulation
 		'''
 	# return mdata['IDeat'][(mdata['ID']==bhiord)], mdata['step'][(mdata['ID']==bhiord)]
-	match = np.where((mdata['ID1'] == bhiord) & (mdata['merge_mass_1'] >= 1e6) & (mdata['merge_mass_2'] >= 1e6) & (
-				np.minimum(mdata['tform1'], mdata['tform2']) > 0)&(mdata['time']<time)&
-	                 (mdata['time']-np.maximum(mdata['tform1'], mdata['tform2'])>dtmin)&
-	                 (mdata['init_dist']>dmin))[0]
+	if mmin is None: #if user doesn't set minimum mass, set it to the initial mass determined in param file
+		mmin = mdata.parameters.init_mbh
+	match_mask = (mdata['ID1'] == bhiord) & (mdata['merge_mass_1'] >= mmin) & (mdata['merge_mass_2'] >= mmin)
+	if dmin is not None:
+		match_mask = match_mask & (mdata['init_dist']>dmin)
+	if dtmin is not None:
+		if 'tform1' not in mdata.keys():
+			mdata.get_tform()
+		match_mask = match_mask & (mdata['time']-np.maximum(mdata['tform1'], mdata['tform2'])>dtmin)
 	match_all = np.where((mdata['ID1'] == bhiord)&(mdata['time']<time))[0]
 	# strict = BHs formed at initial separations greater than a kpc
-	return mdata['ID2'][match], mdata['time'][match], mdata['tform1'][match], mdata['tform2'][match], \
-	       mdata['init_dist'][match], mdata['ID2'][match_all]
+	return mdata['ID2'][match_mask], mdata['time'][match_mask], mdata['merge_mass_1'][match_mask], mdata['merge_mass_2'][match_mask], mdata['ID2'][match_all]
 
-def get_all_mergers(bhiord, mdata, time, dmin, dtmin):
+def get_all_mergers(bhiord, mdata, time, dtmin=None, dmin=None, mmin=None):
 	'''
 	Extract an exhaustive list of mergers along all branches of a target BH's merger tree
 	:param bhiord: target BH id number
@@ -33,8 +37,8 @@ def get_all_mergers(bhiord, mdata, time, dmin, dtmin):
 	:param time: maximum time to consider
 	:param dmin: minimum initial distance for "true" mergers
 	:param dtmin: minimum time since formation for "true" mergers
-	:return: IDs of "true" merger BHs, Merger times, Formation times of each BH (1 and 2),
-	initial distance between BHs, exhaustive list of IDs for ALL mergers in the simulation
+	:param mmin: minimum BH masses to consider. None will default to the initial mass given in param file (or -1 if it doesn't exist)
+	:return: IDs of "true" merger BHs, Merger times, Mass 1, Mass 2, exhaustive list of IDs for ALL mergers in the simulation
 	'''
 	bhlist = list([bhiord])
 	bhlist_new = list([])
@@ -42,40 +46,37 @@ def get_all_mergers(bhiord, mdata, time, dmin, dtmin):
 	id_list = list([])
 	id_list_strict = list([])
 	time_list = list([])
-	dist_list = list([])
-	tform1_list = list([])
-	tform2_list = list([])
+	mass1_list = list([])
+	mass2_list = list([])
 	while len(bhlist) > 0:
 		for i in range(len(bhlist)):
-			bhlist_part, time_part, tform1_part, tform2_part, dist_part, id_all_part = get_mergers_by_id(bhlist[i],
+			bhlist_part, time_part, mass1_part, mass2_part, id_all_part = get_mergers_by_id(bhlist[i],
 			                                                                                             mdata, time,
-			                                                                                             dmin, dtmin)
+			                                                                                             dtmin, dmin, mmin)
 			bhlist_new.extend(bhlist_part)
 			id_list.extend(bhlist_part)
 			time_list.extend(time_part)
-			tform1_list.extend(tform1_part)
-			tform2_list.extend(tform2_part)
+			mass1_list.extend(mass1_part)
+			mass2_list.extend(mass2_part)
 			id_list_all.extend(id_all_part)
-			dist_list.extend(dist_part)
 		bhlist = bhlist_new
 		bhlist_new = list([])
 	time_list = pynbody.array.SimArray(time_list, 'Gyr')
-	tform1_list = pynbody.array.SimArray(tform1_list, 'Gyr')
-	tform2_list = pynbody.array.SimArray(tform2_list, 'Gyr')
-	dist_list = pynbody.array.SimArray(dist_list, 'kpc')
+	mass1_list = pynbody.array.SimArray(mass1_list, 'Msol')
+	mass2_list = pynbody.array.SimArray(mass1_list, 'Msol')
 
-	return np.array(id_list), time_list, tform1_list, tform2_list, dist_list, np.array(id_list_all)
+	return np.array(id_list), time_list,mass1_list, mass2_list, np.array(id_list_all)
 
-def collect_all_bh_mergers(tot_bhids, time, mdata, dmin, dtmin):
+def collect_all_bh_mergers(tot_bhids, time, mdata, dtmin=None, dmin=None, mmin=None):
 	'''
 	:param tot_bhids: the total list of BH ids you want to collect mergers for
 	:param time: maximum time of mergers to consider
 	:param mdata: merger data object
 	:param dmin: the minimum initial separation of BHs to be "true" mergers
 	:param dtmin: the minimum time between formation and merger "true" mergers
-	:return: total number of "true" mergers, "true" merger times, "true" merger BH IDs,
-	All merger BH IDs, time of last "true" merger, final BH ID (same as input), formation time
-	of "True" mergers (1 and 2), and the total number of All mergers.
+	:param mmin: minimum BH masses to consider. None will default to the initial mass given in param file (or -1 if it doesn't exist)
+	:return: total number of "true" mergers, "true" merger times, "true" merger BH IDs, Mass 1, Mass 2,
+	All merger BH IDs, time of last "true" merger, final BH ID (same as input), and the total number of All mergers.
 	'''
 	#tot_bhids = np.append(bhid_cen, bhid_any)
 	#tot_bhids = np.unique(tot_bhids)
@@ -86,26 +87,24 @@ def collect_all_bh_mergers(tot_bhids, time, mdata, dmin, dtmin):
 	iord_merge_all = list([])
 	hid_bh = tot_bhids
 	tlast = np.ones(len(tot_bhids)) * -1
-	tform1 = list([])
-	tform2 = list([])
-	init_dist = list([])
+	mass1 = list([])
+	mass2 = list([])
 
 	for i in range(len(tot_bhids)):
 		frac = i / len(tot_bhids)
 		if frac % 0.1 < 1 / len(tot_bhids): print(frac)
-		prog_id, tm, tf1, tf2, dd, prog_all = get_all_mergers(tot_bhids[i], mdata, time, dmin, dtmin)
+		prog_id, tm, m1, m2, prog_all = get_all_mergers(tot_bhids[i], mdata, time, dtmin, dmin, mmin)
 		nmerge[i] = len(prog_id)
 		nmerge_all[i] = len(prog_all)
 		tmerge.append(tm)
 		iord_merge.append(prog_id)
 		iord_merge_all.append(prog_all)
-		tform1.append(tf1)
-		tform2.append(tf2)
-		init_dist.append(dd)
+		mass1.append(m1)
+		mass2.append(m2)
 		if len(prog_id) > 0:
 			tlast[i] = tm.max()
 
-	return nmerge, tmerge, iord_merge, iord_merge_all, tlast, hid_bh, tform1, tform2, nmerge_all
+	return nmerge, tmerge, iord_merge, iord_merge_all, mass1, mass2, tlast, hid_bh, nmerge_all
 
 
 
@@ -137,17 +136,19 @@ class BHMergers(object):
 			if len(bad2) > 0:
 				IDeat[bad2] = 2 * 2147483648 + IDeat[bad2]
 			
-			testsnap = glob.glob(simname+'.000???')[0]
-			f = pynbody.load(testsnap)
-			tunits = f.infer_original_units('Gyr')
-			munits = f.infer_original_units('Msol')
-			gyr_ratio = pynbody.units.Gyr.ratio(tunits)
-			msol_ratio = pynbody.units.Msol.ratio(munits)
+			#testsnap = glob.glob(simname+'.000???')[0]
+			#f = pynbody.load(testsnap)
+			#tunits = f.infer_original_units('Gyr')
+			#munits = f.infer_original_units('Msol')
+			gyr_ratio = pynbody.units.Gyr.ratio(self.parameters.timeunit_st)
+			msol_ratio = pynbody.units.Msol.ratio(self.parameters.munit_st)
 
 			uIDeat, indices = np.unique(IDeat, return_index=True)
 
-			self.rawdat = {'time': time/gyr_ratio, 'ID1': ID, 'ID2': IDeat, 'ratio': ratio, 'kick': kick, 'scale': scale,
-			               'redshift': scale**-1 -1, 'merge_mass_1': Mass1/msol_ratio, 'merge_mass_2':Mass2/msol_ratio}
+
+			self.rawdat = {'time': pynbody.array.SimArray(time/gyr_ratio,'Gyr'), 'ID1': ID, 'ID2': IDeat, 'ratio': ratio, 'kick': kick, 'scale': scale,
+			               'redshift': scale**-1 -1, 'merge_mass_1': pynbody.array.SimArray(Mass1/msol_ratio,'Msol'), 
+						   'merge_mass_2':pynbody.array.SimArray(Mass2/msol_ratio,'Msol')}
 			util.cutdict(self.rawdat, indices)
 			ordr = np.argsort(self.rawdat['ID2'])
 			util.cutdict(self.rawdat, ordr)
@@ -174,17 +175,29 @@ class BHMergers(object):
 		                               self.parameters.h, self.parameters.omegaM, self.parameters.omegaL)
 		self.rawdat['redshift'] = z
 	
-	def get_tform(self,bhorbit):
+	def get_tform(self):
 		self.rawdat['tform1'] = np.ones(len(self.rawdat['ID1']))*-1
 		self.rawdat['tform2'] = np.ones(len(self.rawdat['ID2']))*-1
 
+		from .starlog import read_starlog
+		sl = read_starlog(self.simname)
+		bhmask = sl['tform']<0
+		bhiords_sl = sl['iord'][bhmask]
+		if np.max(sl['tform'][bhmask])>0:
+			raise RuntimeError("Positive tforms were found in starlog file!")
+
 		for i in range(len(self.rawdat['ID2'])):
-			time1 = bhorbit[self.rawdat['ID1'][i], 'time']
-			time2 = bhorbit[self.rawdat['ID2'][i], 'time']
-			if len(time1)>0:
-				self.rawdat['tform1'][i] = bhorbit.tform[(bhorbit.bhiords==self.rawdat['ID1'][i])][0]
-			if len(time2)>0:
-				self.rawdat['tform2'][i] = bhorbit.tform[(bhorbit.bhiords==self.rawdat['ID2'][i])][0]
+			if self.rawdat['ID2'][i] not in bhiords_sl or self.rawdat['ID1'][i] not in bhiords_sl:
+				continue
+			bh1_mask = sl['iord']==self.rawdat['ID1'][i]
+			bh2_mask = sl['iord']==self.rawdat['ID2'][i]
+			tform1 = sl['tform'][bh1_mask]
+			tform2 = sl['tform'][bh2_mask]
+			if tform1 > 0 or tform2 > 0:
+				raise RuntimeError("a positive tform was found for one of the black holes!")
+			self.rawdat['tform1'][i] = tform1*-1
+			self.rawdat['tform2'][i] = tform2*-1
+
 
 	def get_initial_distance(self,bhorbit):
 		self.rawdat['init_dist'] = np.ones(len(self.rawdat['ID1']))*-1
