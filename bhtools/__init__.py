@@ -106,5 +106,6 @@ class BHCatalog(object):
             tsmooth = pynbody.units.Unit(dt)
             nsmooth = int(tsmooth.ratio(self.orbitdata.dTout))
             lum_smooth = smoothdata(self[iord,'lum_er_'+str(er)]/ledd(self[iord,'mass',track]),nsteps=nsmooth,dosum=False)
+            time = self[iord,'time',track][int(nsmooth/2)::nsmooth]
         return lum_smooth, time
 
