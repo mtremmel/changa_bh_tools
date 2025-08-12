@@ -13,7 +13,7 @@ phys_const = {
 }
 
 def ledd(mass):
-    return mass * phys_const['lbol_sun'] * 3.2e4
+    return mass * phys_const['lbol_sun'] * pynbody.array.SimArray(3.2e4,'Msol**-1')
 
 def smoothdata(rawdat,nsteps=20,ret_std=False, dosum=False):
     nind = len(rawdat) - len(rawdat)%nsteps
