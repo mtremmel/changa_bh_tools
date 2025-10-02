@@ -1,1 +1,3 @@
-from . import orbit, mergers, starlog
+from .orbit import *
+from .mergers import *
+from .starlog import *
