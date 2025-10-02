@@ -6,14 +6,14 @@ import pynbody
 
 def get_mergers_by_id(bhiord, mdata, time, dtmin=None, dmin=None, mmin=None):
 	'''
-		Extract information on mergers which involve a specific BH ID number.
+		Extract information on mergers which involve a specific BH ID number as ID1 (surviving BH).
 		:param bhiord: target BH id number
 		:param mdata: merger data
 		:param time: maximum time to consider
 		:param dmin: minimum initial distance for "true" mergers
 		:param dtmin: minimum time since formation for "true" mergers
 		:param mmin: minimum BH masses to consider. None will default to the initial mass given in param file (or -1 if it doesn't exist)
-		:return: IDs of "true" merger BHs, Merger times, Mass 1, Mass 2, exhaustive list of IDs for ALL mergers in the simulation
+		:return: (for mergers matching given criteria) ID1 of mergers, ID1 2 [destroyed BH], times, Mass 1, Mass 2
 		'''
 	# return mdata['IDeat'][(mdata['ID']==bhiord)], mdata['step'][(mdata['ID']==bhiord)]
 	if mmin is None: #if user doesn't set minimum mass, set it to the initial mass determined in param file
@@ -27,7 +27,7 @@ def get_mergers_by_id(bhiord, mdata, time, dtmin=None, dmin=None, mmin=None):
 		match_mask = match_mask & (mdata['time']-np.maximum(mdata['tform1'], mdata['tform2'])>dtmin)
 	match_all = np.where((mdata['ID1'] == bhiord)&(mdata['time']<time))[0]
 	# strict = BHs formed at initial separations greater than a kpc
-	return mdata['ID2'][match_mask], mdata['time'][match_mask], mdata['merge_mass_1'][match_mask], mdata['merge_mass_2'][match_mask], mdata['ID2'][match_all]
+	return mdata['ID2'][match_mask], mdata['time'][match_mask], mdata['merge_mass_1'][match_mask], mdata['merge_mass_2'][match_mask]
 
 def get_all_mergers(bhiord, mdata, time, dtmin=None, dmin=None, mmin=None):
 	'''
@@ -42,30 +42,29 @@ def get_all_mergers(bhiord, mdata, time, dtmin=None, dmin=None, mmin=None):
 	'''
 	bhlist = list([bhiord])
 	bhlist_new = list([])
-	id_list_all = list([])
-	id_list = list([])
-	id_list_strict = list([])
+	id1_list = list([])
+	id2_list = list([])
 	time_list = list([])
 	mass1_list = list([])
 	mass2_list = list([])
 	while len(bhlist) > 0:
 		for i in range(len(bhlist)):
-			bhlist_part, time_part, mass1_part, mass2_part, id_all_part = get_mergers_by_id(bhlist[i],
-			                                                                                             mdata, time,
-			                                                                                             dtmin, dmin, mmin)
-			bhlist_new.extend(bhlist_part)
-			id_list.extend(bhlist_part)
+			bh2list_part, time_part, mass1_part, mass2_part = \
+				get_mergers_by_id(bhlist[i], mdata, time,dtmin, dmin, mmin)
+			bhlist_new.extend(bh2list_part)
+			bh1list_part = np.ones(len(bh2list_part))*bhlist[i]
+			id1_list.extend(bh1list_part.astype(np.int64))
+			id2_list.extend(bh2list_part)
 			time_list.extend(time_part)
 			mass1_list.extend(mass1_part)
 			mass2_list.extend(mass2_part)
-			id_list_all.extend(id_all_part)
 		bhlist = bhlist_new
 		bhlist_new = list([])
 	time_list = pynbody.array.SimArray(time_list, 'Gyr')
 	mass1_list = pynbody.array.SimArray(mass1_list, 'Msol')
-	mass2_list = pynbody.array.SimArray(mass1_list, 'Msol')
+	mass2_list = pynbody.array.SimArray(mass2_list, 'Msol')
 
-	return np.array(id_list), time_list,mass1_list, mass2_list, np.array(id_list_all)
+	return np.array(id1_list), np.array(id2_list), time_list,mass1_list, mass2_list,
 
 def collect_all_bh_mergers(tot_bhids, time, mdata, dtmin=None, dmin=None, mmin=None):
 	'''
@@ -109,23 +108,30 @@ def collect_all_bh_mergers(tot_bhids, time, mdata, dtmin=None, dmin=None, mmin=N
 
 
 class BHMergers(object):
-	def __init__(self, simname, paramfile=None, use_existing_object=None):
+	def __init__(self, path_to_simulation='.', simname=None, paramfile=None, use_existing_object=None):
 		'''
 		:param simname: name of simulation (based on output file names)
 		:param paramfile: name of param file (default is simname.param)
 		:param use_existing_object: initialize a new object from an old one
 		'''	
-		self.simname = simname
+		self.simpath=path_to_simulation
 		self.db_mergers = {}
-		if paramfile is None:
-			self.paramfile = simname+'.param'
-		else:
-			self.paramfile = paramfile
+
+		paramfile = util.find_file_by_extension('.param',path_to_simulation, simname)
+		if not paramfile or not os.path.exists(paramfile):
+			raise RuntimeError("cannot find a param file in current directory or within a directory", simname)
+		self.paramfile = paramfile
+
 		self.parameters = util.param_reader.ParamFile(self.paramfile)
+
 		if use_existing_object:
 			self._initialize_from_existing(use_existing_object)
 		else:
-			self.mergerfile = simname + '.BHmergers'
+			filename = util.find_file_by_extension('.BHmergers',path_to_simulation, simname)
+			if not filename or not os.path.exists(filename):
+				raise RuntimeError("cannot find a BHmergers file in current directory or within a directory", simname)
+			self.mergerfile = filename
+
 			print("reading .mergers file...")
 			ID, IDeat, Mass1, Mass2, ratio, kick, time, scale = util.readcol.readcol(self.mergerfile, twod=False)
 			print("checking for bad IDs...")
