@@ -14,7 +14,7 @@ class BHCatalog(object):
         self.simpath=path_to_simulation
         print("loading in orbit file...")
         if bhorbit:
-            if type(bhorbit) is not orbit.BlackHoles:
+            if type(bhorbit) is not orbit.BlackHoles and type(bhorbit) is not orbit.ConvertOldOrbit:
                 raise RuntimeError("format of orbit object given not recognized ")
             self.orbitdata = bhorbit
         else:

@@ -3,6 +3,7 @@ import os
 import numpy as np
 import pynbody
 from ..util import *
+import gc
 
 from bhtools.util import readcol
 
