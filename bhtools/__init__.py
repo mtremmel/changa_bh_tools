@@ -98,6 +98,12 @@ class BHCatalog(object):
     
 
     def smoothed_accretion_history(self, iord, dt='10 Myr', track='major'):
+        '''
+        Get accretion history for a black hole smoothed over a given timeframe
+        :param iord: ID of target black hole (taken from last time it exists in the simulation)
+        :param dt: the time over which to smooth (default 10 Myr)
+        :param track: raw/major will track BH based its ID (raw)) or its mass (major) when it goes through mergers
+        '''
         if type(track)!=str or track not in ['major','raw']:
             raise ValueError("Keyword track must be either 'major' or 'raw'")
         if type(dt)==int or type(dt)==float:
@@ -115,6 +121,14 @@ class BHCatalog(object):
         return mdot_smooth.in_units('Msol yr**-1'), time
 
     def smoothed_luminosity_history(self, iord, dt='10 Myr', er=0.1, fedd=False, track='major'):
+        '''
+        Get luminosity history for a black hole smoothed over a given timeframe
+        :param iord: ID of target black hole (taken from last time it exists in the simulation)
+        :param dt: the time over which to smooth (default 10 Myr)
+        :param er: radiative efficiency to assume (constant; default 0.1)
+        :param fedd: True/False to present luminosity in terms of the eddington rate
+        :param track: raw/major will track BH based its ID (raw)) or its mass (major) when it goes through mergers
+        '''
         if fedd is False:
             mdot_smooth, time = self.smoothed_accretion_history(iord,dt,track)
             csq = phys_const['c'].in_units('cm s**-1')**2
