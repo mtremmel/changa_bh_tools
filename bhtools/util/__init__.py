@@ -1,6 +1,7 @@
 from . import param_reader, readcol, cosmology
 import numpy as np
 import pynbody
+import glob
 
 #useful constants
 phys_const = {
@@ -62,3 +63,20 @@ def write_dict_to_file(filename, my_dict, *keys_to_output_in_order, fmt=None):
     for key in keys_to_output_in_order:
         tofile.append(my_dict[key])
     np.savetxt(filename, np.column_stack(tofile), fmt=fmt)
+
+def find_file_by_extension(file_extension, path, simname):
+    if simname is None:
+        search1 = glob.glob(path+file_extension)
+    else:
+        search1 = glob.glob(path+'/'+simname+file_extension)
+    if len(search1)==0:
+        if simname is None:
+            search2 = glob.glob(path+'/*'+file_extension)
+        else:
+            search2 = glob.glob(path+'/'+simname+file_extension)
+        if len(search2)==0:
+            return False
+        else:
+            return search2[0]
+    else:
+        return search1[0]
