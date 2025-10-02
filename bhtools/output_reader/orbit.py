@@ -27,6 +27,9 @@ class BHOrbitData(object):
 	def _col_data(self):
 		return
 
+	def keys(self):
+		return self._data.keys()
+
 	def __getitem__(self, item):
 		'''
 		user can get data under "key" for an individual BH with orbit_object[(iord,"key")]
@@ -238,18 +241,25 @@ class BlackHoles(BHOrbitData):
 		self._data['dt'] = self._data['dt'].in_units('Gyr')
 		self._data['time'] = self._data['time'].in_units('Gyr')
 
-	def __init__(self, simname, filename=None, paramfile=None):
-		if paramfile is None:
-			self.paramfile = simname+'.param'
-		else:
-			self.paramfile = paramfile
-		if filename is None:
-			self.filename = simname+'.BlackHoles'
-		else:
-			self.filename = filename
+	def __init__(self, path_to_simulation='.', simname=None):
+		'''
+		path_to_simulation: path to directory hosting simulation data
+		simname: specific name of simulation if directory has multiple (i.e. simname.param, simname.stepnum, simname.BlackHoles)
+		'''
+		self.simpath=path_to_simulation
+		paramfile = find_file_by_extension('.param',path_to_simulation, simname)
+		print(paramfile)
+		if not paramfile or not os.path.exists(paramfile):
+			raise RuntimeError("cannot find a param file in current directory or within a directory", simname)
 
-		if not os.path.exists(self.filename):
-			raise RuntimeError("file", self.filename, "not found! Exiting...")
+		self.paramfile = paramfile
+
+		filename = find_file_by_extension('.BlackHoles',path_to_simulation, simname)
+
+		if not filename or not os.path.exists(filename):
+			raise RuntimeError("cannot find a BlackHoles file in current directory or within a directory", simname)
+
+		self.filename=filename
 
 		super().__init__(self.paramfile)
 
