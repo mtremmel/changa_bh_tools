@@ -32,6 +32,9 @@ class ParamFile(object):
 	def __getitem__(self, item):
 		return self.params[item]
 
+	def keys(self):
+		return self.params.keys()
+
 	def _get_cosmology(self):
 		self.omegaM = float(self.params['dOmega0'])
 		self.omegaL = float(self.params['dLambda'])
