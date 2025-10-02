@@ -3,12 +3,29 @@ from .util import *
 from .tangos_interface import *
 
 class BHCatalog(object):
-    def __init__(self, simname):
-        self.simname=simname
+    def __init__(self, path_to_simulation='.', simname=None, bhorbit=None, bhmerger=None):
+        '''
+            Load in all BH time information and merger information
+            :param path_to_simulation: name of directory with simualtion data or name of simulation within current directory
+            :param simname: name of simulation such that there exists path_to_simulation/simname.param file
+            :param bhorbit: bhorbit object you'd like to load in rather than attempting to read information anew
+            :param bhmerger: bhmerger object to load in rather than read information anew
+        '''
+        self.simpath=path_to_simulation
         print("loading in orbit file...")
-        self.orbitdata = orbit.BlackHoles(simname)
+        if bhorbit:
+            if type(bhorbit) is not orbit.BlackHoles:
+                raise RuntimeError("format of orbit object given not recognized ")
+            self.orbitdata = bhorbit
+        else:
+            self.orbitdata = orbit.BlackHoles(path_to_simulation, simname)
         print("loading in mergers file...")
-        self.mergers = mergers.BHMergers(simname)
+        if bhmerger:
+            if type(bhmerger) is not mergers.BHMergers:
+                raise RuntimeError("format of merger object given not recognized")
+            self.mergers = bhmerger
+        else:
+            self.mergers = mergers.BHMergers(path_to_simulation, simname)
     
     def parameters(self):
         #get the loaded in parameters which shouls already have been loaded in with both orbit and mergers
@@ -38,7 +55,7 @@ class BHCatalog(object):
             tmax = self.orbitdata._data['time'][self.orbitdata._bhind[bhid]].max()
         else:
             tmax=tstart
-        merge_id, tmerge, mass1, mass2, merge_id_all = \
+        merge_id, tmerge, mass1, mass2 = \
 			mergers.get_mergers_by_id(bhid, self.mergers, tmax, dmin=dmin, dtmin=dtmin)
         tord = np.argsort(tmerge)[::-1]
         tmerge = tmerge[tord]
@@ -56,7 +73,7 @@ class BHCatalog(object):
                 tbranch_change.append(tmerge[i])
                 id_branch_change.append(cur_merge_id)
                 cur_prog_id = cur_merge_id
-                merge_id, tmerge, mass1, mass2, merge_id_all = \
+                merge_id, tmerge, mass1, mass2 = \
 					mergers.get_mergers_by_id(cur_prog_id, self.mergers, tmerge[i], dmin=dmin, dtmin=dtmin)
                 nmerge = len(merge_id)
                 if nmerge==0:
@@ -108,4 +125,28 @@ class BHCatalog(object):
             lum_smooth = smoothdata(self[iord,'lum_er_'+str(er),track]/ledd(self[iord,'mass',track]),nsteps=nsmooth,dosum=False)
             time = self[iord,'time',track][int(nsmooth/2)::nsmooth]
         return lum_smooth, time
+
+    def get_full_merger_tree(self, bhiord, time, dtmin=None, dmin=None, mmin=None):
+        '''
+		Get all mergers within a given BHs merger tree across all branches with limits (see below).
+		:param bhiord: target BH id number
+		:param time: maximum time to consider
+		:param dmin: minimum initial distance for "true" mergers
+		:param dtmin: minimum time since formation for "true" mergers
+		:param mmin: minimum BH masses to consider. None will default to the initial mass given in param file (or -1 if it doesn't exist)
+	    :return: ID1, ID2 (eaten BH), Times, Mass 1, Mass 2
+		'''
+        return mergers.get_all_mergers(bhiord, self.mergers, time, dtmin=dtmin, dmin=dmin, mmin=mmin)
+
+    def get_mergers_by_eater_id(self, bhiord, time, dtmin=None, dmin=None, mmin=None):
+        '''
+            Get all mergers where the "eater" (surviving) BH has ID number bhiord
+            :param bhiord: target BH id number
+            :param time: maximum time to consider
+		    :param dmin: minimum initial distance for "true" mergers
+		    :param dtmin: minimum time since formation for "true" mergers
+		    :param mmin: minimum BH masses to consider. None will default to the initial mass given in param file (or -1 if it doesn't exist)
+	        :return: ID2 (eaten BH), Times, Mass 1, Mass 2
+        '''
+        return mergers.get_mergers_by_id(bhiord, self.mergers, time, dtmin=dtmin, dmin=dmin, mmin=mmin)
 
