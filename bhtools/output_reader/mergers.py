@@ -115,6 +115,7 @@ class BHMergers(object):
 		:param use_existing_object: initialize a new object from an old one
 		'''	
 		self.simpath=path_to_simulation
+		self.simname=simname
 		self.db_mergers = {}
 
 		paramfile = util.find_file_by_extension('.param',path_to_simulation, simname)
@@ -186,7 +187,7 @@ class BHMergers(object):
 		self.rawdat['tform2'] = np.ones(len(self.rawdat['ID2']))*-1
 
 		from .starlog import read_starlog
-		sl = read_starlog(self.simname)
+		sl = read_starlog(self.simpath,self.simname)
 		bhmask = sl['tform']<0
 		bhiords_sl = sl['iord'][bhmask]
 		if np.max(sl['tform'][bhmask])>0:
