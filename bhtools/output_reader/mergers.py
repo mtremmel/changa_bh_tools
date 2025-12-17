@@ -134,35 +134,38 @@ class BHMergers(object):
 			self.mergerfile = filename
 
 			print("reading .mergers file...")
-			ID, IDeat, Mass1, Mass2, ratio, kick, time, scale = util.readcol.readcol(self.mergerfile, twod=False)
-			print("checking for bad IDs...")
-			bad = np.where(ID < 0)[0]
-			if len(bad) > 0:
-				ID[bad] = 2 * 2147483648 + ID[bad]
-			bad2 = np.where(IDeat < 0)[0]
-			if len(bad2) > 0:
-				IDeat[bad2] = 2 * 2147483648 + IDeat[bad2]
-			
-			#testsnap = glob.glob(simname+'.000???')[0]
-			#f = pynbody.load(testsnap)
-			#tunits = f.infer_original_units('Gyr')
-			#munits = f.infer_original_units('Msol')
-			gyr_ratio = pynbody.units.Gyr.ratio(self.parameters.timeunit_st)
-			msol_ratio = pynbody.units.Msol.ratio(self.parameters.munit_st)
+			if os.path.getsize(self.mergerfile)>0:
+				ID, IDeat, Mass1, Mass2, ratio, kick, time, scale = util.readcol.readcol(self.mergerfile, twod=False)
+				print("checking for bad IDs...")
+				bad = np.where(ID < 0)[0]
+				if len(bad) > 0:
+					ID[bad] = 2 * 2147483648 + ID[bad]
+				bad2 = np.where(IDeat < 0)[0]
+				if len(bad2) > 0:
+					IDeat[bad2] = 2 * 2147483648 + IDeat[bad2]
 
-			uIDeat, indices = np.unique(IDeat, return_index=True)
+				gyr_ratio = pynbody.units.Gyr.ratio(self.parameters.timeunit_st)
+				msol_ratio = pynbody.units.Msol.ratio(self.parameters.munit_st)
+
+				uIDeat, indices = np.unique(IDeat, return_index=True)
 
 
-			self.rawdat = {'time': pynbody.array.SimArray(time/gyr_ratio,'Gyr'), 'ID1': ID, 'ID2': IDeat, 'ratio': ratio, 'kick': kick, 'scale': scale,
+				self.rawdat = {'time': pynbody.array.SimArray(time/gyr_ratio,'Gyr'), 'ID1': ID, 'ID2': IDeat, 'ratio': ratio, 'kick': kick, 'scale': scale,
 			               'redshift': scale**-1 -1, 'merge_mass_1': pynbody.array.SimArray(Mass1/msol_ratio,'Msol'), 
 						   'merge_mass_2':pynbody.array.SimArray(Mass2/msol_ratio,'Msol')}
-			util.cutdict(self.rawdat, indices)
-			ordr = np.argsort(self.rawdat['ID2'])
-			util.cutdict(self.rawdat, ordr)
+				util.cutdict(self.rawdat, indices)
+				ordr = np.argsort(self.rawdat['ID2'])
+				util.cutdict(self.rawdat, ordr)
 
-			uIDeat, cnt = np.unique(self.rawdat['ID2'], return_counts=True)
-			if len(np.where(cnt > 1)[0]) > 0:
-				raise RuntimeWarning("Same Black Hole Marked as Eaten TWICE!")
+				uIDeat, cnt = np.unique(self.rawdat['ID2'], return_counts=True)
+				if len(np.where(cnt > 1)[0]) > 0:
+					raise RuntimeWarning("Same Black Hole Marked as Eaten TWICE!")
+			
+			else: #if merger file is empty
+				print("merger file appears empty... making emtpy merger object")
+				self.rawdat = {'time': pynbody.array.SimArray([],'Gyr'), 'ID1': np.array([]), 'ID2': np.array([]), 'ratio': np.array([]), 'kick': np.array([]), 'scale': np.array([]),
+			               'redshift': np.array([]), 'merge_mass_1': pynbody.array.SimArray([],'Msol'), 
+						   'merge_mass_2':pynbody.array.SimArray([],'Msol')}
 
 	def __getitem__(self,item):
 		return self.rawdat[item]
