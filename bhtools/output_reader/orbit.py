@@ -63,18 +63,20 @@ class BHOrbitData(object):
 		ord_ = np.argsort(self._data['iord'])
 		uvalues, ind = np.unique(self._data['iord'][ord_], return_index=True)
 		slice_ = []
-		for i in range(len(uvalues) - 1):
-			ss = ord_[ind[i]:ind[i + 1]]
-			sort_ = np.argsort(self._data['time'][ss])
-			ss = ss[sort_]
-			#check for multiples in time and keep only the last one in the file
-			utime, utind, cnt = np.unique(self._data['time'][ss], return_counts=True, return_index=True)
-			double_ind = np.where(cnt>1)[0]
-			to_cut = []
-			for ii in double_ind:
-				to_cut.extend(utind[ii:ii+cnt[ii]-1])
-			ss = np.delete(ss,to_cut)
-			slice_.append(ss)
+		i = 0
+		if len(uvalues)>1:
+			for i in range(len(uvalues) - 1):
+				ss = ord_[ind[i]:ind[i + 1]]
+				sort_ = np.argsort(self._data['time'][ss])
+				ss = ss[sort_]
+				#check for multiples in time and keep only the last one in the file
+				utime, utind, cnt = np.unique(self._data['time'][ss], return_counts=True, return_index=True)
+				double_ind = np.where(cnt>1)[0]
+				to_cut = []
+				for ii in double_ind:
+					to_cut.extend(utind[ii:ii+cnt[ii]-1])
+				ss = np.delete(ss,to_cut)
+				slice_.append(ss)
 		#do last chunk
 		ss = ord_[ind[i + 1]:]
 		sort_ = np.argsort(self._data['time'][ss])
