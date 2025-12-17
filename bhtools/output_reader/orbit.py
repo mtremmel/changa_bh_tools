@@ -77,6 +77,8 @@ class BHOrbitData(object):
 					to_cut.extend(utind[ii:ii+cnt[ii]-1])
 				ss = np.delete(ss,to_cut)
 				slice_.append(ss)
+		else:
+			i = -1
 		#do last chunk
 		ss = ord_[ind[i + 1]:]
 		sort_ = np.argsort(self._data['time'][ss])
