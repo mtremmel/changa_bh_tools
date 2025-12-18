@@ -20,6 +20,8 @@ class ParamFile(object):
 		for line in f:
 			if line[0] != "#" and len(line)>0:
 				s = line.split("#")[0].split()
+				if len(s)==0:
+					continue
 				self.params[s[0]] = " ".join(s[2:])
 		f.close()
 		self._get_basic_units()
