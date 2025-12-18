@@ -22,7 +22,11 @@ class ParamFile(object):
 				s = line.split("#")[0].split()
 				if len(s)==0:
 					continue
-				self.params[s[0]] = " ".join(s[2:])
+				if len(s)<3: #oops no space between = in param file!
+					ss = s[0].split('=')
+					self.params[ss[0]] = " ".join(ss[1:])
+				else:
+					self.params[s[0]] = " ".join(s[2:])
 		f.close()
 		self._get_basic_units()
 		self._get_cosmology()
