@@ -201,8 +201,8 @@ class BHMergers(object):
 				continue
 			bh1_mask = sl['iord']==self.rawdat['ID1'][i]
 			bh2_mask = sl['iord']==self.rawdat['ID2'][i]
-			tform1 = sl['tform'][bh1_mask]
-			tform2 = sl['tform'][bh2_mask]
+			tform1 = sl['tform'].in_units('Gyr')[bh1_mask]
+			tform2 = sl['tform'].in_units('Gyr')[bh2_mask]
 			if tform1 > 0 or tform2 > 0:
 				raise RuntimeError("a positive tform was found for one of the black holes!")
 			self.rawdat['tform1'][i] = tform1*-1
