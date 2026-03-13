@@ -270,9 +270,12 @@ class BlackHoles(BHOrbitData):
 
 		self.dTout = self._get_output_cadence()
 		self._phys_conv()
+		self._data['mdot_ave'] = self._data['dMtot']/self.dTout
+		self._data['mdot_ave'] = self._data['mdot_ave'].in_units('Msol yr**-1')
 
 	def calc_lum(self, er=0.1):
 		self._data['lum_er_'+str(er)] = self._data['mdot'].in_units('g s**-1')*phys_const['c'].in_units('cm s**-1')**2 *er
+		self._data['lum_er_'+str(er)+"_ave"] = self._data['mdot_ave'].in_units('g s**-1')*phys_const['c'].in_units('cm s**-1')**2 *er
 		
 
 	def _get_output_cadence(self):
