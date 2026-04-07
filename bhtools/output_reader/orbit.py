@@ -211,7 +211,7 @@ class BlackHoles(BHOrbitData):
 			'vz': pynbody.array.SimArray(vz[tsort], self.parameters.velunit_st),
 			'pot': pynbody.array.SimArray(pot[tsort], self.parameters.potunit_st),
 			'mdot': pynbody.array.SimArray(Mdot[tsort], self.parameters.munit_st / self.parameters.timeunit_st),
-			'dM': pynbody.array.SimArray(mass[tsort], self.parameters.munit_st),
+			'dM': pynbody.array.SimArray(dM[tsort], self.parameters.munit_st),
 			'dE': pynbody.array.SimArray(mass[tsort], self.parameters.munit_st * self.parameters.velunit_st ** 2),
 			'dt': pynbody.array.SimArray(dt[tsort], self.parameters.timeunit_st),
 			'dMtot': pynbody.array.SimArray(dMaccum[tsort], self.parameters.munit_st),
