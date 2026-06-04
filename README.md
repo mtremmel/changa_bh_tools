@@ -26,7 +26,7 @@ f.close()
 f = open('my_orbit_pickle.pkl','rb')
 bhorbit_existing = pickle.load(f)
 f.close()
-bhcat = bhtools.BHCatalog(bhorbit=bhorbit_existing, bhmergers=bhmergers_existing)
+bhcat = bhtools.BHCatalog(bhorbit=bhorbit_existing, bhmerger=bhmergers_existing)
 ```
 
 <h3>Using the Catalog</h3>
