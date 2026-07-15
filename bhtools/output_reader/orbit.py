@@ -64,6 +64,7 @@ class BHOrbitData(object):
 		uvalues, ind = np.unique(self._data['iord'][ord_], return_index=True)
 		slice_ = []
 		i = 0
+		badmassflag = False
 		if len(uvalues)>1:
 			for i in range(len(uvalues) - 1):
 				ss = ord_[ind[i]:ind[i + 1]]
@@ -76,6 +77,36 @@ class BHOrbitData(object):
 				for ii in double_ind:
 					to_cut.extend(utind[ii:ii+cnt[ii]-1])
 				ss = np.delete(ss,to_cut)
+				dm = self._data['mass'][ss][1:]-self._data['mass'][ss][:-1]
+				bad = np.where(dm<0)[0]
+				bad = bad[::-1]
+				while len(bad)>0:
+					for j in bad:
+						mafter = self._data['mass'][ss][1:][j+1]
+						if mafter > self._data['mass'][ss][:-1][j]:
+							ss = np.delete(ss,j+1)
+						else:
+							ss = np.delete(ss,j)
+					dm = self._data['mass'][ss][1:]-self._data['mass'][ss][:-1]
+					bad = np.where(dm<0)[0]
+					bad = bad[::-1]
+				#if len(bad)>0:
+				#	badmassflag=True
+				#	mafter = self._data['mass'][ss][1:][bad[0]+1]
+				#	if mafter>self._data['mass'][ss][:-1][bad[0]]:
+				#		highpass=True
+				#	else:
+				#		highpass=False
+				#	while len(bad)>0:
+				#		if highpass:
+				#			ss = np.delete(ss,bad+1)
+				#		else:
+				#			ss = np.delete(ss,bad)
+				#	dm = self._data['mass'][ss][1:]-self._data['mass'][ss][:-1]
+				#	bad = np.where(dm<0)[0]
+				#	bad=bad[::-1]
+				#if badmassflag:
+				#	print("WARNING: Bad mass evolution found, indicating repeat steps with slightly different times. Data cleaned further, but be careful!")
 				slice_.append(ss)
 		else:
 			i = -1
@@ -89,6 +120,21 @@ class BHOrbitData(object):
 		for ii in double_ind:
 			to_cut.extend(utind[ii:ii + cnt[ii] - 1])
 		ss = np.delete(ss, to_cut)
+		#times aren't exactly the same between outputs so to really make sure we have to remove oscillations in mass
+		#Start from the last time to make the best attempt at keeping the most recent version
+		dm = self._data['mass'][ss][1:]-self._data['mass'][ss][:-1]
+		bad = np.where(dm<0)[0]
+		bad = bad[::-1] #reverse so it goes later points first
+		while len(bad)>0:
+			for j in bad:
+				mafter = self._data['mass'][ss][1:][j+1]
+				if mafter > self._data['mass'][ss][:-1][j]:
+					ss = np.delete(ss,j+1)
+				else:
+					ss = np.delete(ss,j)
+			dm = self._data['mass'][ss][1:]-self._data['mass'][ss][:-1]
+			bad = np.where(dm<0)[0]
+			bad = bad[::-1]
 		slice_.append(ss)
 		return uvalues, slice_
 	

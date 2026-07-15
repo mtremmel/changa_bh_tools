@@ -163,4 +163,27 @@ class BHCatalog(object):
 	        :return: ID2 (eaten BH), Times, Mass 1, Mass 2
         '''
         return mergers.get_mergers_by_id(bhiord, self.mergers, time, dtmin=dtmin, dmin=dmin, mmin=mmin)
+    
+    def get_mergers_main_progenitor(self, bhiord, dtmin=None, dmin=None, mmin=None):
+        bhiord_hist = self[bhiord,'iord', 'major']
+        time_hist = self[bhiord,'time','major']
+        uids, ind_change = np.unique(bhiord_hist, return_index=True)
+        time_change = self[bhiord,'time'][ind_change]
+        mass1 = np.array([])
+        mass2 = np.array([])
+        time_merge = np.array([])
+        id_merge = np.array([])
+        for i in range(len(uids)):
+            if i+1 < len(uids):
+                tmax = time_change[i+1]
+            else:
+                tmax = time_hist.max()
+            id2_part, tmerge_part, m1_part, m2_part = self.get_mergers_by_eater_id(uids[i],tmax,dtmin,dmin,mmin)
+            use = tmerge_part >= time_change[i]
+            mass1 = np.append(mass1,m1_part[use])
+            mass2 = np.append(mass2,m2_part[use])
+            time_merge = np.append(time_merge,tmerge_part[use])
+            id_merge = np.append(id_merge,id2_part[use])
+        return pynbody.array.SimArray(time_merge,'Gyr'), id_merge.astype(np.int64), pynbody.array.SimArray(mass1,'Msol'), \
+            pynbody.array.SimArray(mass2,'Msol')
 
