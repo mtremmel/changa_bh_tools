@@ -18,7 +18,7 @@ class MbhMstarRelation(object):
     def intrinsic_scatter(self, citation):
         return self._params[citation][4]
 
-    def plot(self, citation, logmstar_min, logmstar_max, log=False, color='k', show_scatter=True, scatter_alpha=0.5, **kwargs):
+    def plot(self, citation, logmstar_min, logmstar_max, log=False, color='k', show_scatter=True, scatter_alpha=0.5, axes=None, **kwargs):
         '''
         :param citation: name of relation (check _params.keys() for options)
         :param logmstar_min: minimum log10(mstar) you want to plot
@@ -33,12 +33,22 @@ class MbhMstarRelation(object):
         if not log:
             xarray = 10**xarray
             yarray = 10**yarray
-
-        plt.plot(xarray, yarray, color=color, **kwargs)
+        if axes:
+            axes.plot(xarray, yarray, color=color, **kwargs)
+        else:
+            plt.plot(xarray, yarray, color=color, **kwargs)
         if show_scatter:
             if not log:
-                plt.fill_between(xarray, 10**(np.log10(yarray)+self._params[citation][3]),
+                if axes:
+                    axes.fill_between(xarray, 10**(np.log10(yarray)+self._params[citation][3]),
+                             10**(np.log10(yarray)-self._params[citation][3]), alpha=scatter_alpha, color=color)
+                else:
+                    plt.fill_between(xarray, 10**(np.log10(yarray)+self._params[citation][3]),
                              10**(np.log10(yarray)-self._params[citation][3]), alpha=scatter_alpha, color=color)
             else:
-                plt.fill_between(xarray, yarray+self._params[citation][3], yarray-self._params[citation][3],
+                if axes:
+                    axes.fill_between(xarray, yarray+self._params[citation][3], yarray-self._params[citation][3],
+                                 alpha=scatter_alpha, color=color)
+                else:
+                    plt.fill_between(xarray, yarray+self._params[citation][3], yarray-self._params[citation][3],
                                  alpha=scatter_alpha, color=color)
