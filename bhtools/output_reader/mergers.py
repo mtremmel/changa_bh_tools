@@ -24,7 +24,7 @@ def get_mergers_by_id(bhiord, mdata, time, dtmin=None, dmin=None, mmin=None):
 	if dtmin is not None:
 		if 'tform1' not in mdata.keys():
 			mdata.get_tform()
-		match_mask = match_mask & (mdata['time']-np.maximum(mdata['tform1'], mdata['tform2'])>dtmin)
+		match_mask = (mdata['tform']>0) & match_mask & (mdata['time']-np.maximum(mdata['tform1'], mdata['tform2'])>dtmin)
 	match_all = np.where((mdata['ID1'] == bhiord)&(mdata['time']<time))[0]
 	# strict = BHs formed at initial separations greater than a kpc
 	return mdata['ID2'][match_mask], mdata['time'][match_mask], mdata['merge_mass_1'][match_mask], mdata['merge_mass_2'][match_mask]
