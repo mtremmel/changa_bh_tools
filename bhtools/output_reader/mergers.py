@@ -203,6 +203,11 @@ class BHMergers(object):
 			bh2_mask = sl['iord']==self.rawdat['ID2'][i]
 			tform1 = sl['tform'].in_units('Gyr')[bh1_mask]
 			tform2 = sl['tform'].in_units('Gyr')[bh2_mask]
+			#Ensure only one tform exists for each blackhole
+			if tform1.size != 1 or tform2.size != 1:
+				raise ValueError(f"Expected one tform per bh", f"ID1={self.rawdat['ID1'][i]} has {tform1.size} matches", f"ID2={self.rawdat['ID2'][i]} has {tform2.size} matches")
+			tform1 = tform1.item() #Extract value from the array
+			tform2 = tform2.item()
 			if tform1 > 0 or tform2 > 0:
 				raise RuntimeError("a positive tform was found for one of the black holes!")
 			self.rawdat['tform1'][i] = tform1*-1
