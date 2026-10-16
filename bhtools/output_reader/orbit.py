@@ -78,17 +78,21 @@ class BHOrbitData(object):
 					to_cut.extend(utind[ii:ii+cnt[ii]-1])
 				ss = np.delete(ss,to_cut)
 				dm = self._data['mass'][ss][1:]-self._data['mass'][ss][:-1]
-				bad = np.where(dm<0)[0]
+				bad = np.where(dm/self._data['mass'][ss][:-1]<-0.0001)[0]
 				bad = bad[::-1]
 				while len(bad)>0:
 					for j in bad:
-						mafter = self._data['mass'][ss][1:][j+1]
-						if mafter > self._data['mass'][ss][:-1][j]:
+						if j == len(self._data['mass'][ss][1:])-1:
+							#if the "bad" index is at the of the current list, delete it
 							ss = np.delete(ss,j+1)
-						else:
-							ss = np.delete(ss,j)
+						else: # if not, compare the step after before deciding which to delete
+							mafter = self._data['mass'][ss][1:][j+1]
+							if mafter > self._data['mass'][ss][:-1][j]:
+								ss = np.delete(ss,j+1)
+							else:
+								ss = np.delete(ss,j)
 					dm = self._data['mass'][ss][1:]-self._data['mass'][ss][:-1]
-					bad = np.where(dm<0)[0]
+					bad = np.where(dm/self._data['mass'][ss][:-1]<-0.0001)[0]
 					bad = bad[::-1]
 				#if len(bad)>0:
 				#	badmassflag=True
